@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs
+logs/
+*.log
+
+# Modelos YOLO (grandes - não subir)
+*.pt
+
+# Configuração com senhas (NÃO SUBIR!)
+config.json
+config_optimized.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.claude/
+.claude.json
+.claude.json.backup
+
+# Temporários
+tmp/
+temp/
+*.tmp
+nohup.out
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Ambiente
+.env
+.env.local
+
+# Cache
+.cache/
+*.cache

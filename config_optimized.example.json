@@ -1,0 +1,84 @@
+{
+  "camera": {
+    "rtsp_url": "rtsp://usuario:senha@SEU_IP:554/ch01",
+    "reconnect_delay": 5,
+    "buffer_size": 1,
+    "timeout": 10
+  },
+  "detection": {
+    "model": "yolov8s.pt",
+    "confidence_threshold": 0.25,
+    "iou_threshold": 0.3,
+    "device": "cpu",
+    "person_class_id": 0,
+    "max_detections": 100,
+    "augment": true,
+    "half_precision": false
+  },
+  "preprocessing": {
+    "enable": true,
+    "clahe": true,
+    "clahe_clip_limit": 2.0,
+    "clahe_tile_size": 8,
+    "sharpen": true,
+    "denoise": false
+  },
+  "roi": {
+    "enable": true,
+    "top_margin": 0.12,
+    "bottom_margin": 0.0,
+    "left_margin": 0.0,
+    "right_margin": 0.0
+  },
+  "tracking": {
+    "enabled": true,
+    "track_high_thresh": 0.3,
+    "track_low_thresh": 0.1,
+    "new_track_thresh": 0.4,
+    "track_buffer": 60,
+    "match_thresh": 0.8,
+    "frame_rate": 20
+  },
+  "filtering": {
+    "enable": true,
+    "min_area": 400,
+    "min_width": 15,
+    "min_height": 30,
+    "min_aspect_ratio": 0.4,
+    "max_aspect_ratio": 5.0,
+    "seated_person_mode": true
+  },
+  "room": {
+    "max_capacity": 50,
+    "alert_threshold": 0.8,
+    "expected_count_range": [15, 25]
+  },
+  "logging": {
+    "enabled": true,
+    "interval_seconds": 60,
+    "log_directory": "logs",
+    "save_statistics": true,
+    "debug_mode": true
+  },
+  "display": {
+    "show_video": false,
+    "show_bounding_boxes": true,
+    "show_confidence": true,
+    "show_tracker_id": true,
+    "show_info_panel": true,
+    "show_rejected_detections": true,
+    "panel_position": "top-left",
+    "box_color": [0, 255, 0],
+    "rejected_box_color": [0, 0, 255],
+    "text_color": [255, 255, 255],
+    "alert_color": [0, 0, 255],
+    "window_name": "Contagem Otimizada - CCTV"
+  },
+  "performance": {
+    "resize_width": 1280,
+    "resize_height": 720,
+    "skip_frames": 0,
+    "max_fps": 30,
+    "processing_scale": 1.0
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "camera": {
+    "rtsp_url": "rtsp://usuario:senha@192.168.1.100:554/stream1",
+    "reconnect_delay": 5,
+    "buffer_size": 1,
+    "timeout": 10
+  },
+  "detection": {
+    "model": "yolov8n.pt",
+    "confidence_threshold": 0.5,
+    "device": "cpu",
+    "person_class_id": 0
+  },
+  "tracking": {
+    "enabled": true,
+    "max_disappeared": 50,
+    "min_hits": 3
+  },
+  "room": {
+    "max_capacity": 50,
+    "alert_threshold": 0.8
+  },
+  "logging": {
+    "enabled": true,
+    "interval_seconds": 60,
+    "log_directory": "logs",
+    "save_statistics": true
+  },
+  "display": {
+    "show_video": true,
+    "show_bounding_boxes": true,
+    "show_confidence": true,
+    "show_info_panel": true,
+    "panel_position": "top-left",
+    "box_color": [0, 255, 0],
+    "text_color": [255, 255, 255],
+    "alert_color": [0, 0, 255],
+    "window_name": "Contagem de Pessoas - CCTV"
+  },
+  "performance": {
+    "resize_width": 1280,
+    "resize_height": 720,
+    "skip_frames": 0,
+    "max_fps": 30
+  }
+}

@@ -1,0 +1,22 @@
+# Dependências do Sistema de Contagem de Pessoas
+# Instalação: pip install -r requirements.txt
+
+# Visão Computacional e Detecção
+ultralytics>=8.0.0          # YOLOv8 para detecção de pessoas
+opencv-python>=4.8.0        # Processamento de vídeo e imagens
+opencv-contrib-python>=4.8.0  # Módulos adicionais do OpenCV
+
+# Rastreamento de objetos
+supervision>=0.16.0         # Ferramentas para rastreamento e anotação
+
+# Processamento numérico
+numpy>=1.24.0               # Operações com arrays
+scipy>=1.11.0               # Funções científicas
+
+# Utilidades
+python-dateutil>=2.8.2      # Manipulação de datas
+pytz>=2023.3                # Fusos horários
+
+# Opcional: Performance em GPU (descomente se tiver NVIDIA GPU)
+# torch>=2.0.0              # PyTorch para GPU acceleration
+# torchvision>=0.15.0       # Visão computacional com PyTorch

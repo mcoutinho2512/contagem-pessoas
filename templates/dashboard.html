@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Contador de Pessoas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .video-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .current-count {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .max-count {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .fps {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-active {
+            background: #43e97b;
+        }
+
+        .status-error {
+            background: #f5576c;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .info-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #43e97b;
+        }
+
+        .info-section h3 {
+            margin-bottom: 10px;
+            color: #43e97b;
+        }
+
+        .info-section p {
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .calibration-alert {
+            background: rgba(245, 87, 108, 0.3);
+            border-left-color: #f5576c;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #f5576c;
+        }
+
+        .calibration-alert h4 {
+            color: #f5576c;
+            margin-bottom: 10px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+
+        .timestamp {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        .refresh-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #43e97b;
+            border-radius: 50%;
+            margin-left: 5px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎥 Sistema de Contagem de Pessoas</h1>
+            <p class="subtitle">Monitoramento em Tempo Real via CCTV</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Vídeo -->
+            <div class="card">
+                <h2 style="margin-bottom: 15px;">📹 Visualização ao Vivo</h2>
+                <div class="video-container">
+                    <img src="{{ url_for('video_feed') }}" alt="Video Stream">
+                </div>
+                <div class="timestamp" id="timestamp">
+                    Atualizado: --
+                </div>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="card">
+                <h2 style="margin-bottom: 15px;">📊 Estatísticas</h2>
+                <div class="stats-grid">
+                    <div class="stat-card current-count">
+                        <div class="stat-label">Pessoas Agora</div>
+                        <div class="stat-value" id="current-count">0</div>
+                    </div>
+
+                    <div class="stat-card max-count">
+                        <div class="stat-label">Máximo Detectado</div>
+                        <div class="stat-value" id="max-count">0</div>
+                    </div>
+
+                    <div class="stat-card fps">
+                        <div class="stat-label">FPS</div>
+                        <div class="stat-value" id="fps">0.0</div>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <strong>Status:</strong>
+                    <span class="status-indicator status-active" id="status-indicator"></span>
+                    <span id="status-text">Sistema Ativo</span>
+                    <span class="refresh-indicator"></span>
+                </div>
+
+                <div class="status-card">
+                    <strong>Frames Processados:</strong>
+                    <span id="frame-count">0</span>
+                </div>
+
+                <div class="calibration-alert">
+                    <h4>⚙️ Calibração Necessária?</h4>
+                    <p>Se a contagem não está correta:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Ajuste <code>confidence_threshold</code> no config.json</li>
+                        <li>Valor baixo (0.3): mais detecções</li>
+                        <li>Valor alto (0.7): menos falsos positivos</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações -->
+        <div class="card">
+            <div class="info-section">
+                <h3>ℹ️ Como Usar</h3>
+                <p><strong>✓ Visualização:</strong> A imagem acima mostra as pessoas detectadas em tempo real com caixas verdes</p>
+                <p><strong>✓ Estatísticas:</strong> Os números são atualizados automaticamente a cada segundo</p>
+                <p><strong>✓ Calibração:</strong> Se a contagem estiver incorreta, ajuste o arquivo config.json</p>
+            </div>
+
+            <div class="info-section">
+                <h3>⚙️ Ajustes de Calibração</h3>
+                <p><strong>confidence_threshold (0.0 - 1.0):</strong></p>
+                <p>• Valor atual recomendado: 0.5</p>
+                <p>• Se detecta menos pessoas que o real: diminua para 0.3</p>
+                <p>• Se detecta mais pessoas que o real: aumente para 0.7</p>
+                <p style="margin-top: 10px;"><strong>Para ajustar:</strong> Edite <code>/home/servicedesk/people-counter/config.json</code> e reinicie o servidor</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Sistema de Contagem de Pessoas | Desenvolvido com YOLOv8 + Flask</p>
+        </footer>
+    </div>
+
+    <script>
+        // Atualizar estatísticas a cada segundo
+        function updateStats() {
+            fetch('/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('current-count').textContent = data.current_count;
+                    document.getElementById('max-count').textContent = data.max_count;
+                    document.getElementById('fps').textContent = data.fps;
+                    document.getElementById('frame-count').textContent = data.frame_count || 0;
+                    document.getElementById('status-text').textContent = data.status;
+
+                    // Atualizar timestamp
+                    const now = new Date();
+                    document.getElementById('timestamp').textContent =
+                        'Atualizado: ' + now.toLocaleTimeString('pt-BR');
+
+                    // Atualizar indicador de status
+                    const indicator = document.getElementById('status-indicator');
+                    if (data.status.includes('Erro')) {
+                        indicator.className = 'status-indicator status-error';
+                    } else {
+                        indicator.className = 'status-indicator status-active';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao atualizar stats:', error);
+                });
+        }
+
+        // Atualizar a cada 1 segundo
+        setInterval(updateStats, 1000);
+
+        // Atualizar imediatamente ao carregar
+        updateStats();
+    </script>
+</body>
+</html>
