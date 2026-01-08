@@ -33,6 +33,7 @@ logs/
 # Configuração com senhas (NÃO SUBIR!)
 config.json
 config_optimized.json
+cameras.json
 
 # IDE
 .vscode/

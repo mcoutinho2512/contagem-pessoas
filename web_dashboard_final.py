@@ -15,8 +15,12 @@ import numpy as np
 from ultralytics import YOLO
 import supervision as sv
 from pathlib import Path
+import os
 
 app = Flask(__name__)
+
+# Caminho do arquivo de câmeras
+CAMERAS_FILE = 'cameras.json'
 
 # Variáveis globais
 latest_frame = None
@@ -49,6 +53,7 @@ class FinalOptimizedCounter:
         self.model = None
         self.tracker = None
         self.running = False
+        self.paused = False  # Flag para pausar processamento durante troca de câmera
 
         # URL da câmera (pode ser alterada em tempo real)
         self.rtsp_url = self.config['camera']['rtsp_url']
@@ -494,6 +499,11 @@ class FinalOptimizedCounter:
         """Loop principal"""
         while self.running:
             try:
+                # Se estiver pausado (troca de câmera), aguardar
+                if self.paused:
+                    time.sleep(0.1)
+                    continue
+
                 self.process_frame()
                 time.sleep(0.03)
             except Exception as e:
@@ -636,10 +646,291 @@ def reconnect_camera():
         }), 500
 
 
+# === GERENCIAMENTO DE MÚLTIPLAS CÂMERAS ===
+
+def load_cameras():
+    """Carrega lista de câmeras do arquivo JSON"""
+    try:
+        if os.path.exists(CAMERAS_FILE):
+            with open(CAMERAS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        else:
+            # Criar arquivo padrão
+            default = {
+                "cameras": [],
+                "active_camera_id": None
+            }
+            save_cameras(default)
+            return default
+    except Exception as e:
+        print(f"Erro ao carregar câmeras: {e}")
+        return {"cameras": [], "active_camera_id": None}
+
+
+def save_cameras(data):
+    """Salva lista de câmeras no arquivo JSON"""
+    try:
+        with open(CAMERAS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"Erro ao salvar câmeras: {e}")
+        return False
+
+
+@app.route('/api/cameras', methods=['GET'])
+def get_cameras():
+    """Lista todas as câmeras cadastradas"""
+    cameras_data = load_cameras()
+    return jsonify(cameras_data)
+
+
+@app.route('/api/cameras', methods=['POST'])
+def add_camera():
+    """Adiciona nova câmera"""
+    try:
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        url = data.get('url', '').strip()
+        description = data.get('description', '').strip()
+
+        if not name or not url:
+            return jsonify({
+                'success': False,
+                'message': 'Nome e URL são obrigatórios'
+            }), 400
+
+        if not url.startswith('rtsp://'):
+            return jsonify({
+                'success': False,
+                'message': 'URL deve começar com rtsp://'
+            }), 400
+
+        cameras_data = load_cameras()
+
+        # Gerar novo ID
+        max_id = max([cam['id'] for cam in cameras_data['cameras']], default=0)
+        new_id = max_id + 1
+
+        # Adicionar nova câmera
+        new_camera = {
+            'id': new_id,
+            'name': name,
+            'url': url,
+            'description': description
+        }
+
+        cameras_data['cameras'].append(new_camera)
+
+        # Se for a primeira câmera, torná-la ativa
+        if len(cameras_data['cameras']) == 1:
+            cameras_data['active_camera_id'] = new_id
+
+        save_cameras(cameras_data)
+
+        return jsonify({
+            'success': True,
+            'message': 'Câmera adicionada com sucesso!',
+            'camera': new_camera
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao adicionar câmera: {str(e)}'
+        }), 500
+
+
+@app.route('/api/cameras/<int:camera_id>', methods=['PUT'])
+def update_camera(camera_id):
+    """Atualiza câmera existente"""
+    try:
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        url = data.get('url', '').strip()
+        description = data.get('description', '').strip()
+
+        if not name or not url:
+            return jsonify({
+                'success': False,
+                'message': 'Nome e URL são obrigatórios'
+            }), 400
+
+        if not url.startswith('rtsp://'):
+            return jsonify({
+                'success': False,
+                'message': 'URL deve começar com rtsp://'
+            }), 400
+
+        cameras_data = load_cameras()
+
+        # Encontrar e atualizar câmera
+        camera_found = False
+        for camera in cameras_data['cameras']:
+            if camera['id'] == camera_id:
+                camera['name'] = name
+                camera['url'] = url
+                camera['description'] = description
+                camera_found = True
+                break
+
+        if not camera_found:
+            return jsonify({
+                'success': False,
+                'message': 'Câmera não encontrada'
+            }), 404
+
+        save_cameras(cameras_data)
+
+        return jsonify({
+            'success': True,
+            'message': 'Câmera atualizada com sucesso!',
+            'camera': camera
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao atualizar câmera: {str(e)}'
+        }), 500
+
+
+@app.route('/api/cameras/<int:camera_id>', methods=['DELETE'])
+def delete_camera(camera_id):
+    """Remove câmera"""
+    try:
+        cameras_data = load_cameras()
+
+        # Encontrar e remover câmera
+        cameras_data['cameras'] = [cam for cam in cameras_data['cameras'] if cam['id'] != camera_id]
+
+        # Se removeu a ativa, resetar
+        if cameras_data['active_camera_id'] == camera_id:
+            cameras_data['active_camera_id'] = None
+            if cameras_data['cameras']:
+                cameras_data['active_camera_id'] = cameras_data['cameras'][0]['id']
+
+        save_cameras(cameras_data)
+
+        return jsonify({
+            'success': True,
+            'message': 'Câmera removida com sucesso!'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao remover câmera: {str(e)}'
+        }), 500
+
+
+@app.route('/api/cameras/<int:camera_id>/activate', methods=['POST'])
+def activate_camera(camera_id):
+    """Ativa uma câmera (troca de câmera)"""
+    global counter, stats
+    import traceback
+
+    try:
+        cameras_data = load_cameras()
+
+        # Encontrar câmera
+        camera = next((cam for cam in cameras_data['cameras'] if cam['id'] == camera_id), None)
+
+        if not camera:
+            return jsonify({
+                'success': False,
+                'message': 'Câmera não encontrada'
+            }), 404
+
+        # Reconectar com nova câmera
+        print(f"\n🔄 Ativando câmera: {camera['name']}")
+        print(f"   URL: {camera['url']}")
+
+        # Pausar processamento
+        counter.paused = True
+        time.sleep(0.3)  # Aguardar frame atual terminar
+
+        # Desconectar câmera atual
+        counter.disconnect_camera()
+        time.sleep(0.5)
+
+        # Resetar ROI para nova câmera
+        counter.roi_auto_detected = False
+        counter.roi_offset = 0
+
+        # Tentar conectar e capturar erro detalhado
+        try:
+            counter.connect_camera(camera['url'])
+        except Exception as conn_error:
+            error_msg = f"Falha ao conectar: {str(conn_error)}"
+            print(f"❌ {error_msg}")
+            print(traceback.format_exc())
+            stats['camera_connected'] = False
+            stats['status'] = error_msg
+            counter.paused = False  # Resumir processamento mesmo com erro
+            return jsonify({
+                'success': False,
+                'message': f"Erro de conexão com a câmera '{camera['name']}': {str(conn_error)}. Verifique se a URL está correta e se a câmera está acessível."
+            }), 500
+
+        # Atualizar câmera ativa
+        cameras_data['active_camera_id'] = camera_id
+        save_cameras(cameras_data)
+
+        stats['camera_url'] = camera['url']
+        stats['camera_connected'] = True
+        stats['status'] = f"Conectado: {camera['name']}"
+
+        # Resetar estatísticas
+        counter.current_count = 0
+        counter.frame_count = 0
+        stats['current_count'] = 0
+        stats['frame_count'] = 0
+        stats['roi_height'] = 0
+
+        print(f"✅ Câmera '{camera['name']}' ativada com sucesso!")
+
+        # Resumir processamento
+        counter.paused = False
+
+        return jsonify({
+            'success': True,
+            'message': f"Câmera '{camera['name']}' ativada com sucesso!",
+            'camera': camera
+        })
+
+    except Exception as e:
+        print(f"❌ Erro ao ativar câmera: {str(e)}")
+        print(traceback.format_exc())
+        stats['camera_connected'] = False
+        stats['status'] = f'Erro: {str(e)}'
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao ativar câmera: {str(e)}'
+        }), 500
+
+
 def run_counter():
     """Thread do contador"""
     global counter
     counter = FinalOptimizedCounter()
+
+    # Carregar câmera ativa do cameras.json (prioridade sobre config)
+    cameras_data = load_cameras()
+    active_camera_url = None
+
+    if cameras_data.get('active_camera_id'):
+        active_camera = next(
+            (cam for cam in cameras_data['cameras'] if cam['id'] == cameras_data['active_camera_id']),
+            None
+        )
+        if active_camera:
+            active_camera_url = active_camera['url']
+            print(f"📹 Usando câmera ativa: {active_camera['name']}")
+            print(f"   URL: {active_camera_url}")
+            # Atualizar URL no config
+            counter.config['camera']['rtsp_url'] = active_camera_url
+            counter.rtsp_url = active_camera_url
 
     if counter.initialize():
         counter.run()

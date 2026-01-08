@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 Dashboard FINAL - Contador de Pessoas</title>
+    <title>🚀 Contagem de Pessoas - COR</title>
     <style>
         * {
             margin: 0;
@@ -374,7 +374,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>🚀 Dashboard FINAL</h1>
+            <h1>🚀 Contagem de Pessoas - COR</h1>
             <p class="subtitle">Sistema Otimizado de Contagem de Pessoas</p>
             <span class="badge">✨ ROI + Troca de URL + YOLOv8s</span>
         </header>
@@ -393,19 +393,36 @@
                     </div>
                 </div>
 
-                <!-- Controle de URL (ABAIXO DO VÍDEO) -->
+                <!-- Controle de Câmera (ABAIXO DO VÍDEO) -->
                 <div class="card">
                     <div class="url-control">
-                        <h3>🎥 Controle de Câmera</h3>
+                        <h3>🎥 Seleção de Câmera</h3>
                         <div class="input-group">
-                            <input type="text" id="cameraUrl"
-                                   placeholder="rtsp://usuario:senha@ip:porta/stream"
-                                   value="rtsp://admin:123456@10.50.14.135:554/ch01">
-                            <button onclick="updateCamera()">🔄 Conectar</button>
-                            <button class="button-secondary" onclick="reconnectCamera()">🔌 Reconectar</button>
+                            <select id="cameraSelect" style="flex: 1; padding: 15px; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 10px; background: rgba(0, 0, 0, 0.4); color: #fff; font-size: 14px;">
+                                <option value="">Carregando câmeras...</option>
+                            </select>
+                            <button onclick="activateSelectedCamera()">🔄 Conectar</button>
+                            <button class="button-secondary" onclick="showAddCameraForm()">➕ Adicionar</button>
+                        </div>
+                        <div class="input-group" style="margin-top: 10px;">
+                            <button onclick="editSelectedCamera()" style="flex: 1; background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%); box-shadow: 0 5px 20px rgba(255, 165, 0, 0.4);">✏️ Editar</button>
+                            <button onclick="deleteSelectedCamera()" style="flex: 1; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4);">🗑️ Excluir</button>
                         </div>
                         <div id="connectionStatus" class="connection-status status-disconnected">
                             🔴 Verificando conexão...
+                        </div>
+                    </div>
+
+                    <!-- Formulário Adicionar/Editar Câmera (oculto por padrão) -->
+                    <div id="addCameraForm" style="display: none; background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 10px; margin-top: 15px;">
+                        <h3 id="formTitle" style="color: #00ffff; margin-bottom: 15px;">➕ Nova Câmera</h3>
+                        <input type="hidden" id="editCameraId" value="">
+                        <input type="text" id="newCameraName" placeholder="Nome da câmera (ex: Sala Principal)" style="width: 100%; margin-bottom: 10px; padding: 12px; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 8px; background: rgba(0, 0, 0, 0.4); color: #fff;">
+                        <input type="text" id="newCameraUrl" placeholder="rtsp://usuario:senha@ip:porta/stream" style="width: 100%; margin-bottom: 10px; padding: 12px; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 8px; background: rgba(0, 0, 0, 0.4); color: #fff; font-family: 'Courier New', monospace;">
+                        <input type="text" id="newCameraDesc" placeholder="Descrição (opcional)" style="width: 100%; margin-bottom: 15px; padding: 12px; border: 2px solid rgba(0, 255, 255, 0.5); border-radius: 8px; background: rgba(0, 0, 0, 0.4); color: #fff;">
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="saveCameraForm()">✅ Salvar</button>
+                            <button class="button-secondary" onclick="hideAddCameraForm()">❌ Cancelar</button>
                         </div>
                     </div>
                 </div>
@@ -507,40 +524,53 @@
     </div>
 
     <script>
-        // Carregar URL atual
-        async function loadCurrentCamera() {
-            try {
-                const response = await fetch('/api/camera/url');
-                const data = await response.json();
+        let camerasData = null;
 
-                document.getElementById('cameraUrl').value = data.url;
-                updateConnectionStatus(data.connected);
+        // Carregar lista de câmeras
+        async function loadCameras() {
+            try {
+                const response = await fetch('/api/cameras');
+                camerasData = await response.json();
+
+                const select = document.getElementById('cameraSelect');
+                select.innerHTML = '';
+
+                if (camerasData.cameras.length === 0) {
+                    select.innerHTML = '<option value="">Nenhuma câmera cadastrada</option>';
+                    return;
+                }
+
+                camerasData.cameras.forEach(camera => {
+                    const option = document.createElement('option');
+                    option.value = camera.id;
+                    option.textContent = `${camera.name} - ${camera.description || camera.url}`;
+
+                    if (camera.id === camerasData.active_camera_id) {
+                        option.selected = true;
+                    }
+
+                    select.appendChild(option);
+                });
+
             } catch (error) {
-                console.error('Erro ao carregar URL:', error);
+                console.error('Erro ao carregar câmeras:', error);
             }
         }
 
-        // Atualizar câmera
-        async function updateCamera() {
-            const url = document.getElementById('cameraUrl').value.trim();
+        // Ativar câmera selecionada
+        async function activateSelectedCamera() {
+            const cameraId = parseInt(document.getElementById('cameraSelect').value);
 
-            if (!url) {
-                alert('❌ Por favor, insira uma URL RTSP válida');
-                return;
-            }
-
-            if (!url.startsWith('rtsp://')) {
-                alert('❌ URL deve começar com rtsp://');
+            if (!cameraId) {
+                alert('❌ Selecione uma câmera');
                 return;
             }
 
             try {
                 updateConnectionStatus(false, 'Conectando...');
 
-                const response = await fetch('/api/camera/url', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({url: url})
+                const response = await fetch(`/api/cameras/${cameraId}/activate`, {
+                    method: 'POST'
                 });
 
                 const data = await response.json();
@@ -548,6 +578,7 @@
                 if (data.success) {
                     updateConnectionStatus(true);
                     alert('✅ ' + data.message);
+                    loadCameras(); // Recarregar para atualizar câmera ativa
                 } else {
                     updateConnectionStatus(false);
                     alert('❌ ' + data.message);
@@ -558,27 +589,133 @@
             }
         }
 
-        // Reconectar câmera
-        async function reconnectCamera() {
-            try {
-                updateConnectionStatus(false, 'Reconectando...');
+        // Mostrar formulário de adicionar câmera
+        function showAddCameraForm() {
+            document.getElementById('formTitle').textContent = '➕ Nova Câmera';
+            document.getElementById('editCameraId').value = '';
+            document.getElementById('newCameraName').value = '';
+            document.getElementById('newCameraUrl').value = '';
+            document.getElementById('newCameraDesc').value = '';
+            document.getElementById('addCameraForm').style.display = 'block';
+            document.getElementById('newCameraName').focus();
+        }
 
-                const response = await fetch('/api/camera/reconnect', {
-                    method: 'POST'
+        // Ocultar formulário
+        function hideAddCameraForm() {
+            document.getElementById('addCameraForm').style.display = 'none';
+            document.getElementById('editCameraId').value = '';
+            document.getElementById('newCameraName').value = '';
+            document.getElementById('newCameraUrl').value = '';
+            document.getElementById('newCameraDesc').value = '';
+        }
+
+        // Salvar câmera (adicionar ou editar)
+        async function saveCameraForm() {
+            const editId = document.getElementById('editCameraId').value;
+            const name = document.getElementById('newCameraName').value.trim();
+            const url = document.getElementById('newCameraUrl').value.trim();
+            const description = document.getElementById('newCameraDesc').value.trim();
+
+            if (!name || !url) {
+                alert('❌ Nome e URL são obrigatórios');
+                return;
+            }
+
+            if (!url.startsWith('rtsp://')) {
+                alert('❌ URL deve começar com rtsp://');
+                return;
+            }
+
+            try {
+                let endpoint = '/api/cameras';
+                let method = 'POST';
+
+                // Se estiver editando, usar PUT
+                if (editId) {
+                    endpoint = `/api/cameras/${editId}`;
+                    method = 'PUT';
+                }
+
+                const response = await fetch(endpoint, {
+                    method: method,
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        name: name,
+                        url: url,
+                        description: description
+                    })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    updateConnectionStatus(true);
                     alert('✅ ' + data.message);
+                    hideAddCameraForm();
+                    loadCameras();
                 } else {
-                    updateConnectionStatus(false);
                     alert('❌ ' + data.message);
                 }
             } catch (error) {
-                updateConnectionStatus(false);
-                alert('❌ Erro: ' + error);
+                alert('❌ Erro ao salvar câmera: ' + error);
+            }
+        }
+
+        // Editar câmera selecionada
+        function editSelectedCamera() {
+            const cameraId = parseInt(document.getElementById('cameraSelect').value);
+
+            if (!cameraId) {
+                alert('❌ Selecione uma câmera para editar');
+                return;
+            }
+
+            // Encontrar câmera nos dados
+            const camera = camerasData.cameras.find(cam => cam.id === cameraId);
+            if (!camera) {
+                alert('❌ Câmera não encontrada');
+                return;
+            }
+
+            // Preencher formulário
+            document.getElementById('formTitle').textContent = '✏️ Editar Câmera';
+            document.getElementById('editCameraId').value = camera.id;
+            document.getElementById('newCameraName').value = camera.name;
+            document.getElementById('newCameraUrl').value = camera.url;
+            document.getElementById('newCameraDesc').value = camera.description || '';
+            document.getElementById('addCameraForm').style.display = 'block';
+            document.getElementById('newCameraName').focus();
+        }
+
+        // Excluir câmera selecionada
+        async function deleteSelectedCamera() {
+            const cameraId = parseInt(document.getElementById('cameraSelect').value);
+
+            if (!cameraId) {
+                alert('❌ Selecione uma câmera para excluir');
+                return;
+            }
+
+            // Confirmar exclusão
+            const camera = camerasData.cameras.find(cam => cam.id === cameraId);
+            if (!confirm(`Tem certeza que deseja excluir a câmera "${camera.name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/cameras/${cameraId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    loadCameras();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ Erro ao excluir câmera: ' + error);
             }
         }
 
@@ -625,15 +762,8 @@
             }
         }
 
-        // Permitir Enter para conectar
-        document.getElementById('cameraUrl').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                updateCamera();
-            }
-        });
-
         // Iniciar
-        loadCurrentCamera();
+        loadCameras();
         setInterval(updateStats, 1000);
         updateStats();
     </script>
