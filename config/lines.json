@@ -1,0 +1,80 @@
+{
+  "d483af1d-3261-4a64-880f-642bcb4bb951": {
+    "name": "Cedae",
+    "point1": [
+      995,
+      467
+    ],
+    "point2": [
+      1182,
+      339
+    ],
+    "direction_mode": "bidirectional",
+    "camera_id": 8,
+    "counts": {
+      "person": {
+        "in": 0,
+        "out": 0
+      },
+      "car": {
+        "in": 0,
+        "out": 35
+      },
+      "motorcycle": {
+        "in": 0,
+        "out": 4
+      },
+      "bus": {
+        "in": 0,
+        "out": 0
+      },
+      "truck": {
+        "in": 0,
+        "out": 0
+      },
+      "bicycle": {
+        "in": 0,
+        "out": 0
+      }
+    }
+  },
+  "be5ba183-982d-4193-863f-9ef0bf3c9094": {
+    "name": "CICC",
+    "point1": [
+      247,
+      425
+    ],
+    "point2": [
+      755,
+      610
+    ],
+    "direction_mode": "bidirectional",
+    "camera_id": 8,
+    "counts": {
+      "person": {
+        "in": 0,
+        "out": 0
+      },
+      "car": {
+        "in": 0,
+        "out": 7
+      },
+      "motorcycle": {
+        "in": 0,
+        "out": 0
+      },
+      "bus": {
+        "in": 0,
+        "out": 0
+      },
+      "truck": {
+        "in": 0,
+        "out": 0
+      },
+      "bicycle": {
+        "in": 0,
+        "out": 0
+      }
+    }
+  }
+}

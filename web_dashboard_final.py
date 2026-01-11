@@ -5,17 +5,30 @@ Dashboard Web FINAL - Sistema de Contagem de Pessoas
 ✨ COM ROI OTIMIZADO + TROCA DE URL DA CÂMERA
 """
 
-from flask import Flask, render_template, Response, jsonify, request
+from flask import Flask, render_template, Response, jsonify, request, send_from_directory
 import cv2
 import json
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 from ultralytics import YOLO
 import supervision as sv
 from pathlib import Path
 import os
+import uuid
+
+# Importar módulos avançados de visão computacional
+from modules.line_counter import LineCounter
+from modules.zone_detector import ZoneDetector
+from modules.abandoned_objects import AbandonedObjectDetector
+from modules.report_generator import ReportGenerator
+from modules.multi_camera import MultiCameraManager
+from modules.visualization import (
+    draw_virtual_lines,
+    draw_detection_zones,
+    draw_abandoned_objects
+)
 
 app = Flask(__name__)
 
@@ -39,8 +52,24 @@ stats = {
     'detection_accuracy': 0,
     'camera_url': '',
     'camera_connected': False,
-    'roi_height': 0
+    'roi_height': 0,
+    'class_counts': {
+        'person': 0,
+        'bicycle': 0,
+        'car': 0,
+        'motorcycle': 0,
+        'bus': 0,
+        'truck': 0
+    },
+    'line_counts': []  # Contadores das linhas virtuais em tempo real
 }
+
+# Módulos avançados (inicializados ao startar)
+line_counter = None
+zone_detector = None
+abandoned_detector = None
+report_generator = None
+multi_camera_manager = None
 
 
 class FinalOptimizedCounter:
@@ -66,6 +95,25 @@ class FinalOptimizedCounter:
         self.rejected_count = 0
         self.start_time = None
         self.rejected_detections = []
+
+        # Contagem por categoria (detecções atuais)
+        self.class_counts = {
+            'person': 0,
+            'bicycle': 0,
+            'car': 0,
+            'motorcycle': 0,
+            'bus': 0,
+            'truck': 0
+        }
+        # Mapeamento de class_id COCO para nome
+        self.CLASS_MAP = {
+            0: 'person',
+            1: 'bicycle',
+            2: 'car',
+            3: 'motorcycle',
+            5: 'bus',
+            7: 'truck'
+        }
 
         # ROI
         self.roi_offset = 0
@@ -189,8 +237,11 @@ class FinalOptimizedCounter:
 
         return enhanced
 
-    def is_valid_detection(self, box, confidence, frame_shape):
-        """Valida detecção"""
+    def is_valid_detection(self, box, confidence, frame_shape, class_id=None):
+        """
+        Valida detecção com thresholds específicos por classe
+        ⚡ MELHORIA: Thresholds ajustados para veículos
+        """
         if not self.config.get('filtering', {}).get('enable'):
             return True, ""
 
@@ -202,22 +253,45 @@ class FinalOptimizedCounter:
         if width <= 0 or height <= 0:
             return False, "dimensões inválidas"
 
-        if area < self.config['filtering']['min_area']:
-            return False, f"área pequena"
+        # Obter nome da classe
+        class_name = self.CLASS_MAP.get(int(class_id), 'unknown') if class_id is not None else 'unknown'
 
-        if width < self.config['filtering']['min_width']:
-            return False, f"largura pequena"
-        if height < self.config['filtering']['min_height']:
-            return False, f"altura pequena"
+        # Usar threshold de área específico por classe
+        class_min_areas = self.config.get('detection', {}).get('class_min_areas', {})
+        min_area = class_min_areas.get(class_name, self.config['filtering']['min_area'])
 
-        aspect_ratio = height / width if width > 0 else 0
-        if aspect_ratio < self.config['filtering']['min_aspect_ratio']:
-            return False, f"muito largo"
-        if aspect_ratio > self.config['filtering']['max_aspect_ratio']:
-            return False, f"muito alto"
+        if area < min_area:
+            return False, f"área pequena ({class_name})"
+
+        # Validação de confidence específica por classe
+        class_conf_thresholds = self.config.get('detection', {}).get('class_confidence_thresholds', {})
+        min_conf = class_conf_thresholds.get(class_name, self.config['detection']['confidence_threshold'])
+
+        if confidence < min_conf:
+            return False, f"conf baixa ({class_name}: {confidence:.2f} < {min_conf})"
+
+        # Validações dimensionais (diferentes para pessoas vs veículos)
+        if class_name == 'person':
+            if width < self.config['filtering']['min_width']:
+                return False, f"largura pequena"
+            if height < self.config['filtering']['min_height']:
+                return False, f"altura pequena"
+
+            aspect_ratio = height / width if width > 0 else 0
+            if aspect_ratio < self.config['filtering']['min_aspect_ratio']:
+                return False, f"muito largo"
+            if aspect_ratio > self.config['filtering']['max_aspect_ratio']:
+                return False, f"muito alto"
+        else:
+            # Veículos: mais tolerantes com aspect ratio
+            aspect_ratio = width / height if height > 0 else 0
+            if aspect_ratio > 6.0:  # Muito largo para veículo
+                return False, f"veículo muito largo"
+            if aspect_ratio < 0.3:  # Muito alto para veículo
+                return False, f"veículo muito alto"
 
         frame_h, frame_w = frame_shape
-        if area > (frame_h * frame_w * 0.4):
+        if area > (frame_h * frame_w * 0.5):  # Aumentado para 50% para veículos grandes
             return False, f"área grande demais"
 
         return True, ""
@@ -320,7 +394,7 @@ class FinalOptimizedCounter:
         results = self.model.track(
             enhanced,
             persist=True,
-            classes=[0],
+            classes=[0, 1, 2, 3, 5, 7],  # pessoa, bicicleta, carro, moto, ônibus, caminhão
             conf=self.config['detection']['confidence_threshold'],
             iou=self.config['detection']['iou_threshold'],
             max_det=self.config['detection']['max_detections'],
@@ -331,13 +405,15 @@ class FinalOptimizedCounter:
         # Converter detecções
         detections = sv.Detections.from_ultralytics(results[0])
 
-        # Filtrar
+        # Filtrar com thresholds específicos por classe
         valid_indices = []
         self.rejected_detections = []
 
-        for i, (box, confidence) in enumerate(zip(detections.xyxy, detections.confidence)):
+        for i, (box, confidence, class_id) in enumerate(
+            zip(detections.xyxy, detections.confidence, detections.class_id)
+        ):
             is_valid, reason = self.is_valid_detection(
-                box, confidence, (enhanced.shape[0], enhanced.shape[1])
+                box, confidence, (enhanced.shape[0], enhanced.shape[1]), class_id
             )
             if is_valid:
                 valid_indices.append(i)
@@ -368,10 +444,104 @@ class FinalOptimizedCounter:
         self.frame_count += 1
         self.rejected_count = len(self.rejected_detections)
 
+        # Atualizar contagem por categoria
+        self.class_counts = {k: 0 for k in self.class_counts}
+        if len(filtered) > 0 and filtered.class_id is not None:
+            for class_id in filtered.class_id:
+                class_name = self.CLASS_MAP.get(int(class_id), 'unknown')
+                if class_name in self.class_counts:
+                    self.class_counts[class_name] += 1
+
+        # ===== PROCESSAR MÓDULOS AVANÇADOS =====
+        global line_counter, zone_detector, abandoned_detector, report_generator
+
+        # Preparar lista de objetos rastreados para os módulos
+        tracked_objects = []
+        if filtered.tracker_id is not None:
+            for i, (bbox, class_id, track_id, confidence) in enumerate(
+                zip(filtered.xyxy, filtered.class_id, filtered.tracker_id, filtered.confidence)
+            ):
+                # Ajustar bbox com offset do ROI
+                adjusted_bbox = [
+                    bbox[0],
+                    bbox[1] + roi_offset,
+                    bbox[2],
+                    bbox[3] + roi_offset
+                ]
+                tracked_objects.append({
+                    'track_id': int(track_id) if track_id is not None else i,
+                    'bbox': adjusted_bbox,
+                    'class_id': int(class_id),
+                    'confidence': float(confidence)
+                })
+
+        # Obter ID da câmera ativa para filtrar linhas/zonas
+        active_camera_id = None
+        try:
+            cameras_data = load_cameras()
+            active_camera_id = cameras_data.get('active_camera_id')
+        except:
+            pass
+
+        # Processar linhas virtuais (apenas da câmera ativa)
+        if line_counter is not None and len(tracked_objects) > 0:
+            line_counter.update(tracked_objects, active_camera_id)
+
+        # Processar zonas de detecção (apenas da câmera ativa)
+        if zone_detector is not None and len(tracked_objects) > 0:
+            zone_detector.update(tracked_objects, active_camera_id)
+
+        # Processar objetos abandonados (detectar objetos não-pessoas)
+        abandoned_objects = []
+        if abandoned_detector is not None:
+            # Passar todas as detecções do YOLO (incluindo não-pessoas)
+            all_detections = []
+            for i, (bbox, confidence, class_id) in enumerate(
+                zip(detections.xyxy, detections.confidence, detections.class_id)
+            ):
+                adjusted_bbox = [
+                    bbox[0],
+                    bbox[1] + roi_offset,
+                    bbox[2],
+                    bbox[3] + roi_offset
+                ]
+                all_detections.append({
+                    'bbox': adjusted_bbox,
+                    'class_id': int(class_id),
+                    'confidence': float(confidence)
+                })
+
+            abandoned_objects = abandoned_detector.update(all_detections)
+
         # Desenhar no frame ORIGINAL (não no ROI)
         annotated = self._draw_detections(frame, filtered, roi_offset)
         annotated = self._draw_roi_indicator(annotated, roi_offset)
         annotated = self._draw_info_panel(annotated, roi_offset)
+
+        # Desenhar funcionalidades avançadas (apenas da câmera ativa e se visível)
+        if analytics_visibility.get('lines', True):
+            if line_counter is not None and len(line_counter.lines) > 0:
+                # Filtrar linhas da câmera ativa
+                camera_lines = {
+                    lid: line for lid, line in line_counter.lines.items()
+                    if line.camera_id == active_camera_id or line.camera_id is None
+                }
+                if camera_lines:
+                    annotated = draw_virtual_lines(annotated, camera_lines, line_counter)
+
+        if analytics_visibility.get('zones', True):
+            if zone_detector is not None and len(zone_detector.zones) > 0:
+                # Filtrar zonas da câmera ativa
+                camera_zones = {
+                    zid: zone for zid, zone in zone_detector.zones.items()
+                    if zone.camera_id == active_camera_id or zone.camera_id is None
+                }
+                if camera_zones:
+                    annotated = draw_detection_zones(annotated, camera_zones, zone_detector)
+
+        if analytics_visibility.get('abandoned', True):
+            if abandoned_objects:
+                annotated = draw_abandoned_objects(annotated, abandoned_objects)
 
         # Atualizar stats
         elapsed = time.time() - self.start_time
@@ -385,6 +555,11 @@ class FinalOptimizedCounter:
         else:
             accuracy = max(0, 100 - ((self.current_count - expected[1]) / expected[1]) * 50)
 
+        # Obter contadores das linhas para atualização em tempo real
+        line_counts_data = []
+        if line_counter is not None:
+            line_counts_data = line_counter.get_lines_list(active_camera_id)
+
         stats.update({
             'current_count': self.current_count,
             'max_count': self.max_count,
@@ -394,7 +569,9 @@ class FinalOptimizedCounter:
             'rejected_count': self.rejected_count,
             'detection_accuracy': round(accuracy, 1),
             'roi_height': roi_offset,
-            'camera_connected': True
+            'camera_connected': True,
+            'class_counts': self.class_counts,
+            'line_counts': line_counts_data  # Atualização em tempo real das linhas
         })
 
         with frame_lock:
@@ -910,6 +1087,501 @@ def activate_camera(camera_id):
         }), 500
 
 
+# ========== API DE PROCESSAMENTO MULTI-CÂMERA ==========
+
+@app.route('/api/background/start', methods=['POST'])
+def start_background_processing():
+    """Inicia processamento de uma câmera em background"""
+    global multi_camera_manager
+
+    if multi_camera_manager is None:
+        return jsonify({
+            'success': False,
+            'message': 'MultiCameraManager não inicializado'
+        }), 500
+
+    try:
+        data = request.json
+        camera_id = data.get('camera_id')
+
+        if not camera_id:
+            return jsonify({
+                'success': False,
+                'message': 'camera_id é obrigatório'
+            }), 400
+
+        # Buscar dados da câmera
+        cameras_data = load_cameras()
+        camera = next((cam for cam in cameras_data['cameras'] if cam['id'] == camera_id), None)
+
+        if not camera:
+            return jsonify({
+                'success': False,
+                'message': 'Câmera não encontrada'
+            }), 404
+
+        # Iniciar processamento em background
+        if multi_camera_manager.start_camera(camera_id, camera['name'], camera['url']):
+            return jsonify({
+                'success': True,
+                'message': f"Processamento background iniciado para '{camera['name']}'",
+                'camera_id': camera_id
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Falha ao iniciar processamento'
+            }), 500
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/background/stop', methods=['POST'])
+def stop_background_processing():
+    """Para processamento de uma câmera em background"""
+    global multi_camera_manager
+
+    if multi_camera_manager is None:
+        return jsonify({
+            'success': False,
+            'message': 'MultiCameraManager não inicializado'
+        }), 500
+
+    try:
+        data = request.json
+        camera_id = data.get('camera_id')
+
+        if not camera_id:
+            return jsonify({
+                'success': False,
+                'message': 'camera_id é obrigatório'
+            }), 400
+
+        if multi_camera_manager.stop_camera(camera_id):
+            return jsonify({
+                'success': True,
+                'message': 'Processamento background parado',
+                'camera_id': camera_id
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Câmera não estava processando em background'
+            }), 404
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/background/status', methods=['GET'])
+def get_background_status():
+    """Retorna status de todas as câmeras em background"""
+    global multi_camera_manager
+
+    if multi_camera_manager is None:
+        return jsonify({
+            'running_cameras': [],
+            'stats': []
+        })
+
+    return jsonify({
+        'running_cameras': multi_camera_manager.get_running_cameras(),
+        'stats': multi_camera_manager.get_all_stats()
+    })
+
+
+@app.route('/api/background/stats/<int:camera_id>', methods=['GET'])
+def get_background_camera_stats(camera_id):
+    """Retorna estatísticas de uma câmera em background"""
+    global multi_camera_manager
+
+    if multi_camera_manager is None:
+        return jsonify({'error': 'MultiCameraManager não inicializado'}), 500
+
+    stats = multi_camera_manager.get_camera_stats(camera_id)
+    if stats:
+        return jsonify(stats)
+    else:
+        return jsonify({'error': 'Câmera não está processando em background'}), 404
+
+
+# ========== ANALYTICS VISIBILITY ==========
+
+# Controle de visibilidade dos analytics no vídeo
+analytics_visibility = {
+    'lines': True,
+    'zones': True,
+    'abandoned': True
+}
+
+
+@app.route('/api/analytics/visibility', methods=['POST'])
+def set_analytics_visibility():
+    """Define quais analytics mostrar no vídeo"""
+    global analytics_visibility
+    try:
+        data = request.json
+        if 'lines' in data:
+            analytics_visibility['lines'] = bool(data['lines'])
+        if 'zones' in data:
+            analytics_visibility['zones'] = bool(data['zones'])
+        if 'abandoned' in data:
+            analytics_visibility['abandoned'] = bool(data['abandoned'])
+        return jsonify({'success': True, 'visibility': analytics_visibility})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+
+
+@app.route('/api/analytics/visibility', methods=['GET'])
+def get_analytics_visibility():
+    """Retorna visibilidade atual dos analytics"""
+    return jsonify(analytics_visibility)
+
+
+# ========== API DE LINHAS VIRTUAIS ==========
+
+@app.route('/api/lines', methods=['GET'])
+def get_lines():
+    """Lista todas as linhas virtuais (opcionalmente filtradas por câmera)"""
+    global line_counter
+    if line_counter is None:
+        return jsonify({'lines': []})
+
+    # Filtrar por câmera se especificado
+    camera_id = request.args.get('camera_id', type=int)
+    return jsonify({'lines': line_counter.get_lines_list(camera_id)})
+
+
+@app.route('/api/lines', methods=['POST'])
+def create_line():
+    """Cria nova linha virtual"""
+    global line_counter
+    if line_counter is None:
+        return jsonify({'success': False, 'message': 'LineCounter não inicializado'}), 500
+
+    try:
+        data = request.json
+        line_id = str(uuid.uuid4())
+
+        # Obter camera_id - obrigatório para associar à câmera
+        camera_id = data.get('camera_id')
+
+        line = line_counter.add_line(
+            line_id,
+            data['name'],
+            tuple(data['point1']),
+            tuple(data['point2']),
+            data.get('direction_mode', 'bidirectional'),
+            camera_id
+        )
+
+        return jsonify({
+            'success': True,
+            'message': 'Linha criada com sucesso!',
+            'line': line.to_dict()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/lines/<line_id>', methods=['DELETE'])
+def delete_line(line_id):
+    """Remove linha virtual"""
+    global line_counter
+    if line_counter is None:
+        return jsonify({'success': False, 'message': 'LineCounter não inicializado'}), 500
+
+    try:
+        if line_counter.remove_line(line_id):
+            return jsonify({'success': True, 'message': 'Linha removida com sucesso!'})
+        else:
+            return jsonify({'success': False, 'message': 'Linha não encontrada'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/lines/reset', methods=['POST'])
+def reset_line_counts():
+    """Reseta contadores de linhas"""
+    global line_counter
+    if line_counter is None:
+        return jsonify({'success': False, 'message': 'LineCounter não inicializado'}), 500
+
+    try:
+        line_id = request.json.get('line_id')  # None = resetar todas
+        line_counter.reset_counts(line_id)
+        return jsonify({'success': True, 'message': 'Contadores resetados!'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ========== API DE ZONAS DE DETECÇÃO ==========
+
+@app.route('/api/zones', methods=['GET'])
+def get_zones():
+    """Lista todas as zonas de detecção (opcionalmente filtradas por câmera)"""
+    global zone_detector
+    if zone_detector is None:
+        return jsonify({'zones': []})
+
+    # Filtrar por câmera se especificado
+    camera_id = request.args.get('camera_id', type=int)
+    return jsonify({'zones': zone_detector.get_zones_list(camera_id)})
+
+
+@app.route('/api/zones', methods=['POST'])
+def create_zone():
+    """Cria nova zona de detecção"""
+    global zone_detector
+    if zone_detector is None:
+        return jsonify({'success': False, 'message': 'ZoneDetector não inicializado'}), 500
+
+    try:
+        data = request.json
+        zone_id = str(uuid.uuid4())
+
+        # Obter camera_id - obrigatório para associar à câmera
+        camera_id = data.get('camera_id')
+
+        zone = zone_detector.add_zone(
+            zone_id,
+            data['name'],
+            data['polygon'],  # Lista de pontos [[x1,y1], [x2,y2], ...]
+            data.get('monitored_classes'),  # None ou lista de class_ids
+            camera_id
+        )
+
+        return jsonify({
+            'success': True,
+            'message': 'Zona criada com sucesso!',
+            'zone': zone.to_dict()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/zones/<zone_id>', methods=['DELETE'])
+def delete_zone(zone_id):
+    """Remove zona de detecção"""
+    global zone_detector
+    if zone_detector is None:
+        return jsonify({'success': False, 'message': 'ZoneDetector não inicializado'}), 500
+
+    try:
+        if zone_detector.remove_zone(zone_id):
+            return jsonify({'success': True, 'message': 'Zona removida com sucesso!'})
+        else:
+            return jsonify({'success': False, 'message': 'Zona não encontrada'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ========== API DE RELATÓRIOS ==========
+
+@app.route('/api/reports/generate', methods=['POST'])
+def generate_report():
+    """Gera relatório no formato especificado"""
+    global report_generator
+    if report_generator is None:
+        return jsonify({'success': False, 'message': 'ReportGenerator não inicializado'}), 500
+
+    try:
+        data = request.json
+        report_type = data.get('type', 'csv')  # 'csv' ou 'json'
+
+        # Gerar relatório (últimas 24h por padrão)
+        if report_type == 'csv':
+            filename = report_generator.generate_csv_report()
+        elif report_type == 'json':
+            filename = report_generator.generate_json_report()
+        else:
+            return jsonify({'success': False, 'message': 'Tipo inválido'}), 400
+
+        return jsonify({
+            'success': True,
+            'message': 'Relatório gerado com sucesso!',
+            'filename': os.path.basename(filename),
+            'download_url': f'/api/reports/download/{os.path.basename(filename)}'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/reports/download/<filename>')
+def download_report(filename):
+    """Download de relatório gerado"""
+    try:
+        return send_from_directory('data/reports', filename, as_attachment=True)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 404
+
+
+@app.route('/api/reports/list', methods=['GET'])
+def list_reports():
+    """Lista relatórios disponíveis"""
+    global report_generator
+    if report_generator is None:
+        return jsonify({'reports': []})
+
+    try:
+        reports = report_generator.get_available_reports()
+        return jsonify({'reports': reports})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/reports/quick/<period>', methods=['GET'])
+def quick_report(period):
+    """
+    Gera relatório rápido para período comum
+    GET /api/reports/quick/today
+    GET /api/reports/quick/yesterday
+    GET /api/reports/quick/week
+    GET /api/reports/quick/month
+    """
+    global line_counter
+
+    try:
+        now = datetime.now()
+
+        # Definir período
+        periods = {
+            'today': (now.replace(hour=0, minute=0, second=0, microsecond=0), now),
+            'yesterday': (
+                (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0),
+                (now - timedelta(days=1)).replace(hour=23, minute=59, second=59)
+            ),
+            'week': (now - timedelta(days=7), now),
+            'month': (now - timedelta(days=30), now)
+        }
+
+        if period not in periods:
+            return jsonify({'success': False, 'message': 'Período inválido. Use: today, yesterday, week, month'}), 400
+
+        start_date, end_date = periods[period]
+
+        # Calcular totais das linhas
+        line_totals = {}
+        grand_total_in = 0
+        grand_total_out = 0
+        class_totals = {}
+
+        if line_counter is not None:
+            for line_id, line in line_counter.lines.items():
+                line_in = sum(c['in'] for c in line.counts.values())
+                line_out = sum(c['out'] for c in line.counts.values())
+                grand_total_in += line_in
+                grand_total_out += line_out
+
+                line_totals[line.name] = {
+                    'in': line_in,
+                    'out': line_out,
+                    'total': line_in + line_out,
+                    'breakdown': line.counts
+                }
+
+                # Agregar por classe
+                for class_name, counts in line.counts.items():
+                    if class_name not in class_totals:
+                        class_totals[class_name] = {'in': 0, 'out': 0}
+                    class_totals[class_name]['in'] += counts['in']
+                    class_totals[class_name]['out'] += counts['out']
+
+        report = {
+            'period': {
+                'name': period,
+                'start': start_date.isoformat(),
+                'end': end_date.isoformat()
+            },
+            'summary': {
+                'total_in': grand_total_in,
+                'total_out': grand_total_out,
+                'total': grand_total_in + grand_total_out
+            },
+            'by_class': class_totals,
+            'by_line': line_totals,
+            'generated_at': now.isoformat()
+        }
+
+        return jsonify({'success': True, 'report': report})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/reports/period', methods=['POST'])
+def period_report():
+    """
+    Gera relatório para período específico
+    POST /api/reports/period
+    Body: {
+        "start_date": "2025-01-01T00:00:00",
+        "end_date": "2025-01-07T23:59:59",
+        "format": "json"  // ou "csv"
+    }
+    """
+    global report_generator, line_counter
+
+    try:
+        data = request.json
+        start_str = data.get('start_date')
+        end_str = data.get('end_date')
+        report_format = data.get('format', 'json')
+
+        if not start_str or not end_str:
+            return jsonify({'success': False, 'message': 'start_date e end_date são obrigatórios'}), 400
+
+        start_date = datetime.fromisoformat(start_str)
+        end_date = datetime.fromisoformat(end_str)
+
+        if report_format == 'csv':
+            filename = report_generator.generate_csv_report(start_date, end_date)
+            return jsonify({
+                'success': True,
+                'filename': os.path.basename(filename),
+                'download_url': f'/api/reports/download/{os.path.basename(filename)}'
+            })
+        else:
+            filename = report_generator.generate_json_report(start_date, end_date)
+            return jsonify({
+                'success': True,
+                'filename': os.path.basename(filename),
+                'download_url': f'/api/reports/download/{os.path.basename(filename)}'
+            })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ========== API DE OBJETOS ABANDONADOS ==========
+
+@app.route('/api/abandoned-objects', methods=['GET'])
+def get_abandoned_objects():
+    """Lista objetos abandonados atualmente detectados"""
+    global abandoned_detector
+    if abandoned_detector is None:
+        return jsonify({'objects': []})
+
+    try:
+        objects = abandoned_detector.get_abandoned_objects()
+        stats_data = abandoned_detector.get_stats()
+
+        return jsonify({
+            'objects': objects,
+            'count': len(objects),
+            'stats': stats_data
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 def run_counter():
     """Thread do contador"""
     global counter
@@ -945,12 +1617,36 @@ if __name__ == '__main__':
     print("   ✅ Troca de URL da Câmera - Interface visual")
     print("   ✅ Modelo YOLOv8s - Máxima acurácia")
     print("   ✅ Pré-processamento - CLAHE + Sharpening")
+    print("   ✅ Linhas Virtuais - Contagem direcional")
+    print("   ✅ Zonas Customizadas - Detecção por área")
+    print("   ✅ Objetos Abandonados - Alerta automático")
+    print("   ✅ Relatórios - Exportação CSV/JSON")
+
+    # Inicializar módulos avançados
+    print("\n🔧 Inicializando módulos avançados...")
+    line_counter = LineCounter()
+    zone_detector = ZoneDetector()
+    abandoned_detector = AbandonedObjectDetector(static_time_threshold=30.0)
+    report_generator = ReportGenerator()
+    print("✓ Módulos inicializados!")
+
+    # Multi-camera será inicializado após o counter (precisa do modelo YOLO)
 
     # Iniciar contador
     counter_thread = threading.Thread(target=run_counter, daemon=True)
     counter_thread.start()
 
-    time.sleep(2)  # Aguardar inicialização
+    time.sleep(3)  # Aguardar inicialização do counter
+
+    # Inicializar MultiCameraManager após counter estar pronto
+    if counter is not None and hasattr(counter, 'model'):
+        print("🎥 Inicializando gerenciador multi-câmera...")
+        multi_camera_manager = MultiCameraManager(
+            model=counter.model,
+            line_counter=line_counter,
+            zone_detector=zone_detector
+        )
+        print("✓ Gerenciador multi-câmera pronto!")
 
     print("\n✓ Servidor iniciado!")
     print("\n📊 Acesse o dashboard:")

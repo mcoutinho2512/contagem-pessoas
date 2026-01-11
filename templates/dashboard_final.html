@@ -214,12 +214,35 @@
         /* ========== MAIN LAYOUT ========== */
         .dashboard-container {
             display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 30px;
-            padding: 30px;
+            grid-template-columns: 1fr 380px;  /* Aumentado de 300px para 380px */
+            gap: 20px;
+            padding: 20px;
             max-width: 1920px;
             margin: 0 auto;
             animation: fadeIn 0.5s ease-out;
+            height: calc(100vh - 80px);
+        }
+
+        /* Coluna direita com scroll */
+        .stats-section {
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 8px;
+        }
+
+        .stats-section::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .stats-section::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        .stats-section::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 3px;
         }
 
         /* ========== VIDEO SECTION ========== */
@@ -317,23 +340,121 @@
         .stats-sidebar {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 12px;
             animation: slideUp 0.6s ease-out 0.2s both;
+            overflow-y: auto;
+            max-height: calc(100vh - 120px);
+        }
+
+        .stats-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .stats-sidebar::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+
+        .stats-sidebar::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 3px;
+        }
+
+        /* ========== ANALYTICS SELECTOR ========== */
+        .analytics-selector {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .analytics-selector-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .analytics-toggles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .analytics-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .analytics-toggle:hover {
+            background: var(--bg-secondary);
+        }
+
+        .analytics-toggle.active {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .analytics-toggle.active.lines {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .analytics-toggle.active.zones {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--accent-success);
+            color: var(--accent-success);
+        }
+
+        .analytics-toggle.active.abandoned {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--accent-danger);
+            color: var(--accent-danger);
+        }
+
+        .analytics-toggle input {
+            display: none;
+        }
+
+        .toggle-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .analytics-toggle.active .toggle-indicator {
+            background: currentColor;
+            box-shadow: 0 0 8px currentColor;
         }
 
         .stats-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
 
         .stat-card {
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 24px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 10px;
+            padding: 12px;
+            transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
         }
@@ -343,29 +464,28 @@
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            height: 3px;
+            width: 3px;
+            height: 100%;
             background: var(--accent-primary);
-            opacity: 0;
-            transition: opacity 0.3s;
+            opacity: 0.5;
         }
 
         .stat-card.primary::before {
-            background: var(--gradient-cyan);
+            background: var(--accent-primary);
         }
 
         .stat-card.secondary::before {
-            background: var(--gradient-purple);
+            background: var(--accent-secondary);
         }
 
         .stat-card.success::before {
-            background: var(--gradient-success);
+            background: var(--accent-success);
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-2px);
             border-color: var(--accent-primary);
-            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.15);
         }
 
         .stat-card:hover::before {
@@ -377,20 +497,17 @@
         }
 
         .stat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
+            display: none;
         }
 
         .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 16px;
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
         }
@@ -411,22 +528,22 @@
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--text-secondary);
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .stat-value {
-            font-size: 48px;
+            font-size: 28px;
             font-weight: 700;
             background: var(--gradient-cyan);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin: 12px 0;
+            margin: 4px 0;
             font-family: 'JetBrains Mono', monospace;
             line-height: 1;
         }
@@ -443,13 +560,29 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            font-size: 36px;
+            font-size: 22px;
+        }
+
+        .stat-card.warning::before {
+            background: var(--accent-warning);
+        }
+
+        .stat-card.warning .stat-value {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 18px;
         }
 
         .stat-indicator {
-            font-size: 13px;
+            font-size: 11px;
             color: var(--accent-success);
             font-weight: 500;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .stat-time {
@@ -585,6 +718,50 @@
         .camera-badge.inactive {
             background: rgba(107, 114, 128, 0.2);
             color: var(--text-muted);
+        }
+
+        .camera-badge.background {
+            background: rgba(124, 58, 237, 0.2);
+            color: #a78bfa;
+        }
+
+        .background-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 8px;
+            font-size: 11px;
+            color: #a78bfa;
+        }
+
+        .background-status .fps {
+            color: var(--accent-success);
+            font-weight: 600;
+        }
+
+        .btn-background {
+            padding: 6px 12px;
+            font-size: 11px;
+            background: rgba(124, 58, 237, 0.2);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            color: #a78bfa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-background:hover {
+            background: rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-background.running {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: var(--accent-danger);
         }
 
         .camera-url {
@@ -857,23 +1034,22 @@
         /* Tablet Grande / iPad Landscape (1024px - 1200px) */
         @media (max-width: 1200px) {
             .dashboard-container {
-                grid-template-columns: 1fr 380px;
-                gap: 24px;
-                padding: 24px;
+                grid-template-columns: 1fr 280px;
+                gap: 16px;
+                padding: 16px;
             }
 
             .stats-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 12px;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
             }
 
             .stat-card {
-                padding: 20px;
+                padding: 10px;
             }
 
             .stat-value {
-                font-size: 42px;
+                font-size: 24px;
             }
 
             .cameras-grid {
@@ -1291,6 +1467,898 @@
                 grid-template-columns: repeat(3, 1fr);
             }
         }
+
+        /* ========== CANVAS OVERLAY E FERRAMENTAS ========== */
+        .video-container {
+            position: relative;
+        }
+
+        #drawingCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #drawingCanvas.active {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+
+        .drawing-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 6px;
+            padding-right: 12px;
+            border-right: 1px solid var(--glass-border);
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
+
+        .toolbar-btn {
+            padding: 10px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+        }
+
+        .toolbar-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .toolbar-btn.danger:hover {
+            border-color: var(--accent-danger);
+            color: var(--accent-danger);
+        }
+
+        .toolbar-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 8px;
+        }
+
+        /* ========== PAINEL LATERAL AVANÇADO ========== */
+        .advanced-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .advanced-panel.hidden {
+            display: none;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--glass-border);
+            cursor: pointer;
+        }
+
+        .panel-header:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .panel-badge {
+            background: var(--accent-primary);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+
+        /* ========== COUNTS SUMMARY ========== */
+        .counts-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            width: 100%;
+        }
+
+        .count-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            transition: all 0.2s;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .count-item:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .count-icon {
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .count-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .count-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            flex-shrink: 0;
+        }
+
+        .panel-toggle {
+            font-size: 12px;
+            color: var(--text-muted);
+            transition: transform 0.3s;
+        }
+
+        .panel-content {
+            padding: 0 10px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .panel-content.open,
+        .panel-content.expanded {
+            max-height: 2000px;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .panel-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .panel-content::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 2px;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 2px;
+        }
+
+        .panel-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .panel-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .panel-item-info {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .panel-item-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-item-stats {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Estilos para contagens de linhas */
+        .line-count-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .line-count-row:last-child {
+            border-bottom: none;
+        }
+
+        .line-count-icon {
+            width: 24px;
+            text-align: center;
+        }
+
+        .line-count-in {
+            color: #10b981;
+            font-weight: 500;
+            min-width: 55px;
+        }
+
+        .line-count-out {
+            color: #ef4444;
+            font-weight: 500;
+            min-width: 65px;
+        }
+
+        .line-count-empty {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 4px 0;
+            font-size: 11px;
+        }
+
+        /* ========== RESUMO TOTAL COMPACTO ========== */
+        .lines-summary {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .summary-header {
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--accent-primary);
+            margin-bottom: 8px;
+        }
+
+        .summary-totals {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .summary-in {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .summary-out {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .summary-total {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--accent-primary);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .summary-by-class {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .summary-class-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 6px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        .summary-class-count {
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .lines-separator {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+            margin: 12px 0;
+        }
+
+        /* ========== LINHAS INDIVIDUAIS ========== */
+        .line-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px !important;
+            margin-bottom: 8px;
+        }
+
+        .line-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .line-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .line-totals {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-primary);
+            background: rgba(0, 212, 255, 0.15);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .line-counts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+        }
+
+        .line-count-compact {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .lc-in {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .lc-out {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        /* ========== CARDS DE LINHA COMPACTOS ========== */
+        .line-card {
+            background: rgba(15, 25, 45, 0.95);
+            border-left: 3px solid var(--line-color);
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+        }
+
+        .line-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .line-card-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .line-color-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .line-card .line-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .line-card-delete {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            background: rgba(239, 68, 68, 0.2);
+            border: none;
+            color: #ef4444;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .line-card-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 8px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .line-card-stats .stat-block {
+            text-align: center;
+        }
+
+        .line-card-stats .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .line-card-stats .stat-label {
+            font-size: 8px;
+            opacity: 0.6;
+            display: block;
+        }
+
+        .stat-block.stat-in .stat-value { color: #10b981; }
+        .stat-block.stat-out .stat-value { color: #f59e0b; }
+        .stat-block.stat-total .stat-value { color: var(--line-color); }
+
+        .line-card-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .line-card-type {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 11px;
+            opacity: 0.5;
+        }
+
+        .line-card-type.active {
+            opacity: 1;
+        }
+
+        .line-card-type .type-icon { font-size: 11px; }
+        .line-card-type .type-count { font-weight: 600; color: #fff; }
+        .line-card-type .type-details { display: flex; gap: 2px; font-size: 9px; }
+        .line-card-type .type-in { color: #10b981; }
+        .line-card-type .type-out { color: #f59e0b; }
+
+        /* Animação de atualização */
+        @keyframes cardPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
+            50% { box-shadow: 0 0 20px 5px rgba(0, 212, 255, 0.3); }
+        }
+
+        .line-card.updated {
+            animation: cardPulse 0.5s ease;
+        }
+
+        .panel-item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .panel-item-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .panel-item-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .panel-item-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--accent-danger);
+            color: var(--accent-danger);
+        }
+
+        .panel-empty {
+            text-align: center;
+            padding: 12px;
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        /* ========== ALERTAS DE OBJETOS ABANDONADOS ========== */
+        .alerts-container {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            z-index: 1500;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+
+        .abandoned-alert {
+            background: rgba(239, 68, 68, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--accent-danger);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 10px 40px rgba(239, 68, 68, 0.4);
+            animation: alertSlideIn 0.3s ease;
+        }
+
+        @keyframes alertSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .alert-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .alert-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .alert-body {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .alert-time {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 8px;
+        }
+
+        /* ========== MODAL DE RELATÓRIOS ========== */
+        .reports-grid {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .report-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+        }
+
+        .report-info {
+            flex: 1;
+        }
+
+        .report-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .report-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .generate-btns {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .generate-btn {
+            flex: 1;
+            padding: 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .generate-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+        }
+
+        .generate-btn .icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* ========== RELATÓRIO RÁPIDO ========== */
+        .quick-report-btns {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-report-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 10px;
+            background: linear-gradient(145deg, rgba(0, 212, 255, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-report-btn:hover {
+            background: linear-gradient(145deg, rgba(0, 212, 255, 0.2), rgba(139, 92, 246, 0.2));
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .quick-report-btn .qr-icon {
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+
+        .quick-report-btn .qr-label {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        #quickReportResult {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .quick-report-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .qr-stat {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .qr-stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .qr-stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .qr-stat.in .qr-stat-value { color: #10b981; }
+        .qr-stat.out .qr-stat-value { color: #f59e0b; }
+        .qr-stat.total .qr-stat-value { color: #00d4ff; }
+
+        .qr-breakdown {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .qr-class {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
+        }
+
+        .qr-class-icon { font-size: 18px; }
+        .qr-class-name { font-size: 12px; color: var(--text-muted); }
+        .qr-class-count { font-size: 14px; font-weight: 700; color: #fff; margin-left: auto; }
+
+        /* ========== CONTADORES DE LINHA ========== */
+        .line-counters {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .counter-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            font-size: 11px;
+        }
+
+        .counter-badge .in {
+            color: var(--accent-success);
+        }
+
+        .counter-badge .out {
+            color: var(--accent-danger);
+        }
+
+        /* ========== ZONA CORES ========== */
+        .zone-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .zone-status.normal {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-success);
+        }
+
+        .zone-status.attention {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-warning);
+        }
+
+        .zone-status.full {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-danger);
+        }
+
+        /* ========== TABS ========== */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -1309,6 +2377,7 @@
                 </div>
 
                 <nav class="header-nav">
+                    <button class="nav-btn" onclick="openReportsModal()">📊 Relatórios</button>
                     <button class="nav-btn" onclick="location.reload()">🔄 Atualizar</button>
                 </nav>
             </div>
@@ -1319,8 +2388,9 @@
     <main class="dashboard-container">
         <!-- VIDEO FEED -->
         <section class="video-section">
-            <div class="video-wrapper">
+            <div class="video-wrapper video-container">
                 <img id="videoFeed" src="/video_feed" alt="Feed ao vivo">
+                <canvas id="drawingCanvas"></canvas>
                 <div class="video-overlay">
                     <div class="people-counter">
                         <span>PESSOAS DETECTADAS:</span>
@@ -1329,47 +2399,184 @@
                 </div>
                 <div class="video-timestamp" id="timestamp">--:--:--</div>
             </div>
+
+            <!-- TOOLBAR DE DESENHO -->
+            <div class="drawing-toolbar">
+                <div class="toolbar-group">
+                    <span class="toolbar-label">Ferramentas:</span>
+                    <button class="toolbar-btn" id="btnDrawLine" onclick="setDrawingMode('line')">
+                        📏 Linha Virtual
+                    </button>
+                    <button class="toolbar-btn" id="btnDrawZone" onclick="setDrawingMode('zone')">
+                        ⬡ Zona
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" id="btnCancel" onclick="cancelDrawing()" style="display:none;">
+                        ✕ Cancelar
+                    </button>
+                    <button class="toolbar-btn" id="btnFinishZone" onclick="finishZone()" style="display:none;">
+                        ✓ Finalizar Zona
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn danger" onclick="clearAllLines()">🗑️ Limpar Linhas</button>
+                    <button class="toolbar-btn danger" onclick="clearAllZones()">🗑️ Limpar Zonas</button>
+                </div>
+            </div>
         </section>
 
         <!-- SIDEBAR -->
         <aside class="stats-sidebar">
-            <!-- STATS CARDS -->
+            <!-- ANALYTICS SELECTOR -->
+            <div class="analytics-selector">
+                <div class="analytics-selector-title">Exibir Analytics</div>
+                <div class="analytics-toggles">
+                    <label class="analytics-toggle active lines" id="toggleLines">
+                        <input type="checkbox" checked onchange="toggleAnalytics('lines', this.checked)">
+                        <span class="toggle-indicator"></span>
+                        <span>📏 Linhas</span>
+                    </label>
+                    <label class="analytics-toggle active zones" id="toggleZones">
+                        <input type="checkbox" checked onchange="toggleAnalytics('zones', this.checked)">
+                        <span class="toggle-indicator"></span>
+                        <span>⬡ Zonas</span>
+                    </label>
+                    <label class="analytics-toggle active abandoned" id="toggleAbandoned">
+                        <input type="checkbox" checked onchange="toggleAnalytics('abandoned', this.checked)">
+                        <span class="toggle-indicator"></span>
+                        <span>⚠️ Alertas</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- STATS CARDS COMPACTOS -->
             <div class="stats-grid">
                 <div class="stat-card primary" id="peopleNowCard">
-                    <div class="stat-header">
-                        <div class="stat-icon">👥</div>
-                    </div>
-                    <div class="stat-label">Pessoas Agora</div>
+                    <div class="stat-label">Deteccoes Atuais</div>
                     <div class="stat-value" id="peopleNow">0</div>
-                    <div class="stat-indicator" id="peopleIndicator">—</div>
+                    <div class="stat-indicator" id="peopleIndicator">-- sem mudancas</div>
                 </div>
-
                 <div class="stat-card secondary">
-                    <div class="stat-header">
-                        <div class="stat-icon">📊</div>
-                    </div>
-                    <div class="stat-label">Máximo Hoje</div>
+                    <div class="stat-label">Maximo Hoje</div>
                     <div class="stat-value" id="maxToday">0</div>
                     <div class="stat-time" id="maxTime">--:--</div>
                 </div>
-
                 <div class="stat-card success">
-                    <div class="stat-header">
-                        <div class="stat-icon">⚡</div>
-                    </div>
-                    <div class="stat-label">Performance</div>
-                    <div class="stat-value" id="fps">0.0<span style="font-size: 20px; margin-left: 5px;">FPS</span></div>
-                    <div class="stat-accuracy" id="accuracy">-- acurácia</div>
+                    <div class="stat-label">FPS</div>
+                    <div class="stat-value" id="fps">0</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-label">Acuracia</div>
+                    <div class="stat-value" id="accuracy" style="font-size: 18px;">--%</div>
                 </div>
             </div>
 
-            <!-- CHART -->
-            <div class="chart-container">
-                <h3>Histórico de Ocupação</h3>
-                <canvas id="occupancyChart"></canvas>
+            <!-- PAINEL CONTAGEM POR CLASSE (DETECCOES ATUAIS) -->
+            <div class="advanced-panel" id="countsByClassPanel">
+                <div class="panel-header" onclick="togglePanel('classCountsPanel')">
+                    <div class="panel-title">
+                        📊 Deteccoes por Tipo
+                        <span class="panel-badge" id="totalCountBadge">0</span>
+                    </div>
+                    <span class="panel-toggle" id="classCountsPanelToggle">▼</span>
+                </div>
+                <div class="panel-content expanded" id="classCountsPanel">
+                    <div id="classCountsList">
+                        <div class="counts-summary">
+                            <div class="count-item">
+                                <span class="count-icon">🚶</span>
+                                <span class="count-label">Pessoas</span>
+                                <span class="count-value" id="countPerson">0</span>
+                            </div>
+                            <div class="count-item">
+                                <span class="count-icon">🚗</span>
+                                <span class="count-label">Carros</span>
+                                <span class="count-value" id="countCar">0</span>
+                            </div>
+                            <div class="count-item">
+                                <span class="count-icon">🏍️</span>
+                                <span class="count-label">Motos</span>
+                                <span class="count-value" id="countMotorcycle">0</span>
+                            </div>
+                            <div class="count-item">
+                                <span class="count-icon">🚌</span>
+                                <span class="count-label">Onibus</span>
+                                <span class="count-value" id="countBus">0</span>
+                            </div>
+                            <div class="count-item">
+                                <span class="count-icon">🚛</span>
+                                <span class="count-label">Caminhoes</span>
+                                <span class="count-value" id="countTruck">0</span>
+                            </div>
+                            <div class="count-item">
+                                <span class="count-icon">🚲</span>
+                                <span class="count-label">Bicicletas</span>
+                                <span class="count-value" id="countBicycle">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAINEL LINHAS VIRTUAIS -->
+            <div class="advanced-panel" id="linesPanelWrapper">
+                <div class="panel-header" onclick="togglePanel('linesPanel')">
+                    <div class="panel-title">
+                        📏 Linhas Virtuais
+                        <span class="panel-badge" id="linesBadge">0</span>
+                    </div>
+                    <span class="panel-toggle" id="linesPanelToggle">▲</span>
+                </div>
+                <div class="panel-content open" id="linesPanel">
+                    <div id="linesList">
+                        <div class="panel-empty">Nenhuma linha. Desenhe no video.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAINEL ZONAS DE DETECÇÃO -->
+            <div class="advanced-panel" id="zonesPanelWrapper">
+                <div class="panel-header" onclick="togglePanel('zonesPanel')">
+                    <div class="panel-title">
+                        ⬡ Zonas de Deteccao
+                        <span class="panel-badge" id="zonesBadge">0</span>
+                    </div>
+                    <span class="panel-toggle" id="zonesPanelToggle">▼</span>
+                </div>
+                <div class="panel-content" id="zonesPanel">
+                    <div id="zonesList">
+                        <div class="panel-empty">Nenhuma zona. Desenhe no video.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAINEL OBJETOS ABANDONADOS -->
+            <div class="advanced-panel" id="abandonedPanelWrapper">
+                <div class="panel-header" onclick="togglePanel('abandonedPanel')">
+                    <div class="panel-title">
+                        ⚠️ Alertas
+                        <span class="panel-badge" id="abandonedBadge" style="background: var(--accent-danger);">0</span>
+                    </div>
+                    <span class="panel-toggle" id="abandonedPanelToggle">▼</span>
+                </div>
+                <div class="panel-content" id="abandonedPanel">
+                    <div id="abandonedList">
+                        <div class="panel-empty">Nenhum alerta ativo.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MINI CHART -->
+            <div class="chart-container" style="padding: 12px;">
+                <h3 style="font-size: 11px; margin-bottom: 8px;">Historico</h3>
+                <canvas id="occupancyChart" style="max-height: 80px;"></canvas>
             </div>
         </aside>
     </main>
+
+    <!-- ALERTAS DE OBJETOS ABANDONADOS -->
+    <div class="alerts-container" id="alertsContainer"></div>
 
     <!-- CAMERAS SECTION -->
     <section class="cameras-section">
@@ -1413,6 +2620,76 @@
         </div>
     </div>
 
+    <!-- MODAL NOME DA LINHA/ZONA -->
+    <div id="nameModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="nameModalTitle">📏 Nome da Linha</h2>
+                <button class="close-btn" onclick="closeNameModal()">×</button>
+            </div>
+            <form id="nameForm" onsubmit="submitName(event)">
+                <input type="hidden" id="itemType">
+                <div class="input-group">
+                    <label class="input-label" for="itemName">Nome</label>
+                    <input type="text" id="itemName" class="input-field" placeholder="Ex: Entrada Principal" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-modal secondary" onclick="closeNameModal()">Cancelar</button>
+                    <button type="submit" class="btn-modal primary">Criar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE RELATÓRIOS -->
+    <div id="reportsModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title">📊 Relatórios</h2>
+                <button class="close-btn" onclick="closeReportsModal()">×</button>
+            </div>
+
+            <h4 style="color: var(--text-secondary); margin-bottom: 12px; font-size: 13px;">⚡ RELATÓRIO RÁPIDO</h4>
+            <div class="quick-report-btns">
+                <button class="quick-report-btn" onclick="quickReport('today')">
+                    <span class="qr-icon">📅</span>
+                    <span class="qr-label">Hoje</span>
+                </button>
+                <button class="quick-report-btn" onclick="quickReport('yesterday')">
+                    <span class="qr-icon">📆</span>
+                    <span class="qr-label">Ontem</span>
+                </button>
+                <button class="quick-report-btn" onclick="quickReport('week')">
+                    <span class="qr-icon">📊</span>
+                    <span class="qr-label">Semana</span>
+                </button>
+                <button class="quick-report-btn" onclick="quickReport('month')">
+                    <span class="qr-icon">📈</span>
+                    <span class="qr-label">Mês</span>
+                </button>
+            </div>
+
+            <div id="quickReportResult" style="display: none;"></div>
+
+            <h4 style="color: var(--text-secondary); margin: 20px 0 12px 0; font-size: 13px;">📤 EXPORTAR RELATÓRIO</h4>
+            <div class="generate-btns">
+                <button class="generate-btn" onclick="generateReport('csv')">
+                    <span class="icon">📄</span>
+                    CSV
+                </button>
+                <button class="generate-btn" onclick="generateReport('json')">
+                    <span class="icon">📋</span>
+                    JSON
+                </button>
+            </div>
+
+            <h4 style="color: var(--text-secondary); margin: 20px 0 12px 0; font-size: 13px;">📁 RELATÓRIOS DISPONÍVEIS</h4>
+            <div class="reports-grid" id="reportsList">
+                <div class="panel-empty">Carregando relatórios...</div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ========== VARIÁVEIS GLOBAIS ==========
         let previousCount = 0;
@@ -1422,20 +2699,861 @@
         let chartData = [];
         const maxChartPoints = 30;
 
+        // ========== VARIÁVEIS DE DESENHO ==========
+        let drawingMode = null; // 'line', 'zone', null
+        let canvas, ctx;
+        let isDrawing = false;
+        let lineStart = null;
+        let zonePoints = [];
+        let tempLine = null;
+        let videoElement;
+        let scaleX = 1, scaleY = 1;
+        let alertsShown = new Set();
+        let activeCameraId = null; // ID da câmera ativa
+        let backgroundCameras = {}; // {camera_id: stats}
+
         // ========== INICIALIZAÇÃO ==========
         document.addEventListener('DOMContentLoaded', function() {
             initChart();
+            initCanvas();
             loadCameras();
+            loadLines();
+            loadZones();
+            loadBackgroundStatus();
             updateStats();
             updateTimestamp();
 
             // Atualizar a cada segundo
             setInterval(updateStats, 1000);
             setInterval(updateTimestamp, 1000);
+            setInterval(updateAbandonedObjects, 2000);
+            setInterval(loadLines, 5000);
+            setInterval(loadZones, 5000);
+            setInterval(loadBackgroundStatus, 3000); // Atualizar status background
 
             // Form submit
             document.getElementById('cameraForm').addEventListener('submit', handleFormSubmit);
         });
+
+        // ========== CANVAS SETUP ==========
+        function initCanvas() {
+            canvas = document.getElementById('drawingCanvas');
+            ctx = canvas.getContext('2d');
+            videoElement = document.getElementById('videoFeed');
+
+            // Ajustar tamanho do canvas quando imagem carrega
+            videoElement.onload = resizeCanvas;
+            window.addEventListener('resize', resizeCanvas);
+
+            // Eventos de mouse
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('click', handleClick);
+
+            // Eventos de toque
+            canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+            resizeCanvas();
+        }
+
+        function resizeCanvas() {
+            if (!videoElement.naturalWidth) {
+                setTimeout(resizeCanvas, 100);
+                return;
+            }
+            canvas.width = videoElement.clientWidth;
+            canvas.height = videoElement.clientHeight;
+            scaleX = videoElement.naturalWidth / canvas.width;
+            scaleY = videoElement.naturalHeight / canvas.height;
+            redrawCanvas();
+        }
+
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Desenhar pontos temporários da zona
+            if (zonePoints.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(zonePoints[0].x / scaleX, zonePoints[0].y / scaleY);
+                for (let i = 1; i < zonePoints.length; i++) {
+                    ctx.lineTo(zonePoints[i].x / scaleX, zonePoints[i].y / scaleY);
+                }
+                ctx.strokeStyle = 'rgba(124, 58, 237, 0.8)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Desenhar pontos
+                zonePoints.forEach((p, i) => {
+                    ctx.beginPath();
+                    ctx.arc(p.x / scaleX, p.y / scaleY, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = i === 0 ? '#10b981' : '#7c3aed';
+                    ctx.fill();
+                });
+            }
+
+            // Desenhar linha temporária
+            if (tempLine) {
+                ctx.beginPath();
+                ctx.moveTo(tempLine.x1 / scaleX, tempLine.y1 / scaleY);
+                ctx.lineTo(tempLine.x2 / scaleX, tempLine.y2 / scaleY);
+                ctx.strokeStyle = 'rgba(0, 212, 255, 0.8)';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Pontos das extremidades
+                ctx.beginPath();
+                ctx.arc(tempLine.x1 / scaleX, tempLine.y1 / scaleY, 6, 0, Math.PI * 2);
+                ctx.fillStyle = '#00d4ff';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(tempLine.x2 / scaleX, tempLine.y2 / scaleY, 6, 0, Math.PI * 2);
+                ctx.fillStyle = '#00d4ff';
+                ctx.fill();
+            }
+        }
+
+        // ========== MODO DE DESENHO ==========
+        function setDrawingMode(mode) {
+            drawingMode = mode;
+            canvas.classList.add('active');
+
+            document.getElementById('btnDrawLine').classList.toggle('active', mode === 'line');
+            document.getElementById('btnDrawZone').classList.toggle('active', mode === 'zone');
+            document.getElementById('btnCancel').style.display = 'inline-flex';
+            document.getElementById('btnFinishZone').style.display = mode === 'zone' ? 'inline-flex' : 'none';
+
+            // Reset temporários
+            lineStart = null;
+            tempLine = null;
+            zonePoints = [];
+            redrawCanvas();
+
+            showToast(mode === 'line' ? 'Clique para definir o ponto inicial da linha' : 'Clique para adicionar pontos da zona', 'warning');
+        }
+
+        function cancelDrawing() {
+            drawingMode = null;
+            canvas.classList.remove('active');
+            document.getElementById('btnDrawLine').classList.remove('active');
+            document.getElementById('btnDrawZone').classList.remove('active');
+            document.getElementById('btnCancel').style.display = 'none';
+            document.getElementById('btnFinishZone').style.display = 'none';
+
+            lineStart = null;
+            tempLine = null;
+            zonePoints = [];
+            redrawCanvas();
+        }
+
+        // ========== EVENTOS DE MOUSE ==========
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function handleMouseDown(e) {
+            if (!drawingMode) return;
+            const pos = getMousePos(e);
+
+            if (drawingMode === 'line') {
+                if (!lineStart) {
+                    lineStart = pos;
+                    isDrawing = true;
+                }
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (!drawingMode) return;
+            const pos = getMousePos(e);
+
+            if (drawingMode === 'line' && isDrawing && lineStart) {
+                tempLine = { x1: lineStart.x, y1: lineStart.y, x2: pos.x, y2: pos.y };
+                redrawCanvas();
+            }
+        }
+
+        function handleMouseUp(e) {
+            if (!drawingMode) return;
+            const pos = getMousePos(e);
+
+            if (drawingMode === 'line' && isDrawing && lineStart) {
+                tempLine = { x1: lineStart.x, y1: lineStart.y, x2: pos.x, y2: pos.y };
+                isDrawing = false;
+
+                // Mostrar modal para nomear
+                openNameModal('line');
+            }
+        }
+
+        function handleClick(e) {
+            if (drawingMode !== 'zone') return;
+            const pos = getMousePos(e);
+
+            zonePoints.push(pos);
+            redrawCanvas();
+
+            if (zonePoints.length >= 3) {
+                showToast(`${zonePoints.length} pontos. Clique em "Finalizar Zona" ou adicione mais pontos.`, 'warning');
+            }
+        }
+
+        function finishZone() {
+            if (zonePoints.length < 3) {
+                showToast('Adicione pelo menos 3 pontos para criar uma zona', 'error');
+                return;
+            }
+            openNameModal('zone');
+        }
+
+        // ========== EVENTOS TOUCH ==========
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            if (e.changedTouches.length > 0) {
+                const touch = e.changedTouches[0];
+                if (drawingMode === 'zone') {
+                    handleClick({ clientX: touch.clientX, clientY: touch.clientY });
+                } else {
+                    handleMouseUp({ clientX: touch.clientX, clientY: touch.clientY });
+                }
+            }
+        }
+
+        // ========== MODAL DE NOME ==========
+        function openNameModal(type) {
+            document.getElementById('itemType').value = type;
+            document.getElementById('nameModalTitle').textContent = type === 'line' ? '📏 Nome da Linha' : '⬡ Nome da Zona';
+            document.getElementById('itemName').value = '';
+            document.getElementById('nameModal').classList.add('active');
+        }
+
+        function closeNameModal() {
+            document.getElementById('nameModal').classList.remove('active');
+            cancelDrawing();
+        }
+
+        async function submitName(e) {
+            e.preventDefault();
+            const type = document.getElementById('itemType').value;
+            const name = document.getElementById('itemName').value;
+
+            try {
+                if (type === 'line') {
+                    await createLine(name);
+                } else {
+                    await createZone(name);
+                }
+                closeNameModal();
+            } catch (error) {
+                showToast('Erro ao criar: ' + error.message, 'error');
+            }
+        }
+
+        // ========== API LINHAS ==========
+        async function createLine(name) {
+            if (!activeCameraId) {
+                throw new Error('Nenhuma câmera ativa. Selecione uma câmera primeiro.');
+            }
+
+            const response = await fetch('/api/lines', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    point1: [Math.round(tempLine.x1), Math.round(tempLine.y1)],
+                    point2: [Math.round(tempLine.x2), Math.round(tempLine.y2)],
+                    direction_mode: 'bidirectional',
+                    monitored_classes: [0, 1, 2, 3, 5, 7],  // pessoa, bicicleta, carro, moto, ônibus, caminhão
+                    camera_id: activeCameraId
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('Linha criada com sucesso!', 'success');
+                loadLines();
+            } else {
+                throw new Error(data.message);
+            }
+        }
+
+        async function loadLines() {
+            try {
+                // Carregar apenas linhas da câmera ativa
+                const url = activeCameraId ? `/api/lines?camera_id=${activeCameraId}` : '/api/lines';
+                const response = await fetch(url);
+                const data = await response.json();
+                const lines = data.lines || [];
+                renderLines(lines);
+                // Nota: contagem por tipo agora vem do backend via updateStats()
+            } catch (error) {
+                console.error('Erro ao carregar linhas:', error);
+            }
+        }
+
+        function renderLines(lines) {
+            const container = document.getElementById('linesList');
+            document.getElementById('linesBadge').textContent = lines.length;
+
+            if (lines.length === 0) {
+                container.innerHTML = '<div class="panel-empty">Nenhuma linha configurada. Use a ferramenta acima para desenhar.</div>';
+                return;
+            }
+
+            // Mapeamento de classes para exibicao
+            const classLabels = {
+                'person': { icon: '🚶', name: 'Pessoas' },
+                'car': { icon: '🚗', name: 'Carros' },
+                'motorcycle': { icon: '🏍️', name: 'Motos' },
+                'bus': { icon: '🚌', name: 'Onibus' },
+                'truck': { icon: '🚛', name: 'Caminhoes' },
+                'bicycle': { icon: '🚲', name: 'Bicicletas' }
+            };
+
+            // Calcular totais gerais de TODAS as linhas
+            const grandTotals = {};
+            for (const key of Object.keys(classLabels)) {
+                grandTotals[key] = { in: 0, out: 0 };
+            }
+
+            lines.forEach(line => {
+                for (const [classKey, counts] of Object.entries(line.counts || {})) {
+                    if (grandTotals[classKey]) {
+                        grandTotals[classKey].in += counts.in || 0;
+                        grandTotals[classKey].out += counts.out || 0;
+                    }
+                }
+            });
+
+            // Calcular total geral IN/OUT
+            let totalIn = 0, totalOut = 0;
+            for (const counts of Object.values(grandTotals)) {
+                totalIn += counts.in;
+                totalOut += counts.out;
+            }
+
+            // HTML do RESUMO TOTAL
+            let html = `
+                <div class="lines-summary">
+                    <div class="summary-header">RESUMO TOTAL (${lines.length} linhas)</div>
+                    <div class="summary-totals">
+                        <span class="summary-in">IN: ${totalIn}</span>
+                        <span class="summary-out">OUT: ${totalOut}</span>
+                        <span class="summary-total">TOTAL: ${totalIn + totalOut}</span>
+                    </div>
+                    <div class="summary-by-class">
+            `;
+
+            for (const [classKey, label] of Object.entries(classLabels)) {
+                const inCount = grandTotals[classKey].in;
+                const outCount = grandTotals[classKey].out;
+                const total = inCount + outCount;
+                if (total > 0) {
+                    html += `
+                        <div class="summary-class-item">
+                            <span>${label.icon}</span>
+                            <span>${label.name}</span>
+                            <span class="summary-class-count">${total}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            html += `
+                    </div>
+                </div>
+                <div class="lines-separator"></div>
+            `;
+
+            // HTML de cada linha individual - CARDS MELHORADOS
+            lines.forEach((line, index) => {
+                // Calcular totais da linha
+                let lineIn = 0, lineOut = 0;
+                for (const counts of Object.values(line.counts || {})) {
+                    lineIn += counts.in || 0;
+                    lineOut += counts.out || 0;
+                }
+                const lineTotal = lineIn + lineOut;
+
+                // Cores para cada linha
+                const lineColors = ['#00d4ff', '#10b981', '#f59e0b', '#ef4444'];
+                const lineColor = lineColors[index % lineColors.length];
+
+                // Construir breakdown por tipo de veículo
+                let breakdownHtml = '';
+                for (const [classKey, label] of Object.entries(classLabels)) {
+                    const inCount = line.counts?.[classKey]?.in || 0;
+                    const outCount = line.counts?.[classKey]?.out || 0;
+                    const total = inCount + outCount;
+
+                    breakdownHtml += `
+                        <div class="line-card-type ${total > 0 ? 'active' : ''}">
+                            <span class="type-icon">${label.icon}</span>
+                            <span class="type-count">${total}</span>
+                            <div class="type-details">
+                                <span class="type-in">↓${inCount}</span>
+                                <span class="type-out">↑${outCount}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="line-card" id="line-card-${line.id}" style="--line-color: ${lineColor}">
+                        <div class="line-card-header">
+                            <div class="line-card-title">
+                                <span class="line-color-dot" style="background: ${lineColor}"></span>
+                                <span class="line-name">${escapeHtml(line.name)}</span>
+                            </div>
+                            <button class="line-card-delete" onclick="deleteLine('${line.id}')" title="Excluir linha">×</button>
+                        </div>
+
+                        <div class="line-card-stats">
+                            <div class="stat-block stat-in">
+                                <div class="stat-value">${lineIn}</div>
+                                <div class="stat-label">ENTRADA</div>
+                            </div>
+                            <div class="stat-block stat-out">
+                                <div class="stat-value">${lineOut}</div>
+                                <div class="stat-label">SAÍDA</div>
+                            </div>
+                            <div class="stat-block stat-total">
+                                <div class="stat-value">${lineTotal}</div>
+                                <div class="stat-label">TOTAL</div>
+                            </div>
+                        </div>
+
+                        <div class="line-card-breakdown">
+                            ${breakdownHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        async function deleteLine(id) {
+            if (!confirm('Excluir esta linha?')) return;
+            try {
+                const response = await fetch(`/api/lines/${id}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Linha removida!', 'success');
+                    loadLines();
+                }
+            } catch (error) {
+                showToast('Erro ao excluir linha', 'error');
+            }
+        }
+
+        async function clearAllLines() {
+            if (!confirm('Limpar todas as linhas?')) return;
+            try {
+                const response = await fetch('/api/lines');
+                const data = await response.json();
+                for (const line of data.lines || []) {
+                    await fetch(`/api/lines/${line.id}`, { method: 'DELETE' });
+                }
+                showToast('Todas as linhas removidas!', 'success');
+                loadLines();
+            } catch (error) {
+                showToast('Erro ao limpar linhas', 'error');
+            }
+        }
+
+        // ========== API ZONAS ==========
+        async function createZone(name) {
+            if (!activeCameraId) {
+                throw new Error('Nenhuma câmera ativa. Selecione uma câmera primeiro.');
+            }
+
+            const polygon = zonePoints.map(p => [Math.round(p.x), Math.round(p.y)]);
+            const response = await fetch('/api/zones', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    polygon: polygon,
+                    monitored_classes: [0, 1, 2, 3, 5, 7],  // pessoa, bicicleta, carro, moto, ônibus, caminhão
+                    camera_id: activeCameraId
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('Zona criada com sucesso!', 'success');
+                loadZones();
+            } else {
+                throw new Error(data.message);
+            }
+        }
+
+        async function loadZones() {
+            try {
+                // Carregar apenas zonas da câmera ativa
+                const url = activeCameraId ? `/api/zones?camera_id=${activeCameraId}` : '/api/zones';
+                const response = await fetch(url);
+                const data = await response.json();
+                renderZones(data.zones || []);
+            } catch (error) {
+                console.error('Erro ao carregar zonas:', error);
+            }
+        }
+
+        function renderZones(zones) {
+            const container = document.getElementById('zonesList');
+            document.getElementById('zonesBadge').textContent = zones.length;
+
+            if (zones.length === 0) {
+                container.innerHTML = '<div class="panel-empty">Nenhuma zona configurada. Use a ferramenta acima para desenhar.</div>';
+                return;
+            }
+
+            let html = '';
+            zones.forEach(zone => {
+                const statusClass = zone.current_count > 10 ? 'full' : zone.current_count > 5 ? 'attention' : 'normal';
+                const statusText = zone.current_count > 10 ? 'LOTADO' : zone.current_count > 5 ? 'ATENÇÃO' : 'NORMAL';
+                html += `
+                    <div class="panel-item">
+                        <div class="panel-item-info">
+                            <div class="panel-item-name">⬡ ${escapeHtml(zone.name)}</div>
+                            <div class="panel-item-stats">
+                                Atual: ${zone.current_count || 0} | Máximo: ${zone.max_count || 0}
+                                <span class="zone-status ${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                        <div class="panel-item-actions">
+                            <button class="panel-item-btn danger" onclick="deleteZone('${zone.id}')" title="Excluir">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function deleteZone(id) {
+            if (!confirm('Excluir esta zona?')) return;
+            try {
+                const response = await fetch(`/api/zones/${id}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Zona removida!', 'success');
+                    loadZones();
+                }
+            } catch (error) {
+                showToast('Erro ao excluir zona', 'error');
+            }
+        }
+
+        async function clearAllZones() {
+            if (!confirm('Limpar todas as zonas?')) return;
+            try {
+                const response = await fetch('/api/zones');
+                const data = await response.json();
+                for (const zone of data.zones || []) {
+                    await fetch(`/api/zones/${zone.id}`, { method: 'DELETE' });
+                }
+                showToast('Todas as zonas removidas!', 'success');
+                loadZones();
+            } catch (error) {
+                showToast('Erro ao limpar zonas', 'error');
+            }
+        }
+
+        // ========== OBJETOS ABANDONADOS ==========
+        async function updateAbandonedObjects() {
+            try {
+                const response = await fetch('/api/abandoned-objects');
+                const data = await response.json();
+                renderAbandonedObjects(data.objects || []);
+                showAbandonedAlerts(data.objects || []);
+            } catch (error) {
+                console.error('Erro ao carregar objetos abandonados:', error);
+            }
+        }
+
+        function renderAbandonedObjects(objects) {
+            const container = document.getElementById('abandonedList');
+            document.getElementById('abandonedBadge').textContent = objects.length;
+
+            if (objects.length === 0) {
+                container.innerHTML = '<div class="panel-empty">Nenhum objeto abandonado detectado.</div>';
+                return;
+            }
+
+            let html = '';
+            objects.forEach(obj => {
+                html += `
+                    <div class="panel-item" style="border-left: 3px solid var(--accent-danger);">
+                        <div class="panel-item-info">
+                            <div class="panel-item-name">⚠️ ${obj.class_name || 'Objeto'}</div>
+                            <div class="panel-item-stats">
+                                Parado há: ${Math.round(obj.static_time || 0)}s
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function showAbandonedAlerts(objects) {
+            const container = document.getElementById('alertsContainer');
+
+            objects.forEach(obj => {
+                const alertId = `alert-${obj.id || obj.class_name}-${Math.round(obj.static_time)}`;
+
+                // Mostrar alerta apenas se tempo >= 30s e ainda não foi mostrado
+                if (obj.static_time >= 30 && !alertsShown.has(alertId)) {
+                    alertsShown.add(alertId);
+
+                    const alert = document.createElement('div');
+                    alert.className = 'abandoned-alert';
+                    alert.id = alertId;
+                    alert.innerHTML = `
+                        <div class="alert-header">
+                            <div class="alert-title">⚠️ OBJETO ABANDONADO</div>
+                            <button class="alert-close" onclick="dismissAlert('${alertId}')">×</button>
+                        </div>
+                        <div class="alert-body">
+                            <strong>${obj.class_name || 'Objeto desconhecido'}</strong> detectado parado há ${Math.round(obj.static_time)} segundos.
+                        </div>
+                        <div class="alert-time">${new Date().toLocaleTimeString('pt-BR')}</div>
+                    `;
+                    container.appendChild(alert);
+
+                    // Auto-dismiss após 10 segundos
+                    setTimeout(() => dismissAlert(alertId), 10000);
+                }
+            });
+        }
+
+        function dismissAlert(alertId) {
+            const alert = document.getElementById(alertId);
+            if (alert) {
+                alert.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => alert.remove(), 300);
+            }
+        }
+
+        // ========== RELATÓRIOS ==========
+        function openReportsModal() {
+            document.getElementById('reportsModal').classList.add('active');
+            loadReports();
+        }
+
+        function closeReportsModal() {
+            document.getElementById('reportsModal').classList.remove('active');
+        }
+
+        async function loadReports() {
+            try {
+                const response = await fetch('/api/reports/list');
+                const data = await response.json();
+                renderReports(data.reports || []);
+            } catch (error) {
+                console.error('Erro ao carregar relatórios:', error);
+            }
+        }
+
+        function renderReports(reports) {
+            const container = document.getElementById('reportsList');
+
+            if (reports.length === 0) {
+                container.innerHTML = '<div class="panel-empty">Nenhum relatório disponível. Clique acima para gerar.</div>';
+                return;
+            }
+
+            let html = '';
+            reports.forEach(report => {
+                const date = new Date(report.created).toLocaleString('pt-BR');
+                const size = (report.size / 1024).toFixed(1) + ' KB';
+                const icon = report.filename.endsWith('.json') ? '📋' : '📄';
+                html += `
+                    <div class="report-item">
+                        <div class="report-info">
+                            <div class="report-name">${icon} ${report.filename}</div>
+                            <div class="report-meta">${date} • ${size}</div>
+                        </div>
+                        <div class="report-actions">
+                            <button class="btn-action primary" onclick="downloadReport('${report.filename}')">⬇️ Baixar</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function generateReport(type) {
+            try {
+                showToast('Gerando relatório...', 'warning');
+                const response = await fetch('/api/reports/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: type })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Relatório gerado com sucesso!', 'success');
+                    loadReports();
+                } else {
+                    showToast('Erro: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showToast('Erro ao gerar relatório', 'error');
+            }
+        }
+
+        async function quickReport(period) {
+            const container = document.getElementById('quickReportResult');
+            const periodLabels = {
+                'today': 'Hoje',
+                'yesterday': 'Ontem',
+                'week': 'Última Semana',
+                'month': 'Último Mês'
+            };
+
+            const classLabels = {
+                'person': { icon: '🚶', name: 'Pessoas' },
+                'car': { icon: '🚗', name: 'Carros' },
+                'motorcycle': { icon: '🏍️', name: 'Motos' },
+                'bus': { icon: '🚌', name: 'Ônibus' },
+                'truck': { icon: '🚛', name: 'Caminhões' },
+                'bicycle': { icon: '🚲', name: 'Bicicletas' }
+            };
+
+            container.innerHTML = '<div style="text-align: center; padding: 20px;">Carregando...</div>';
+            container.style.display = 'block';
+
+            try {
+                const response = await fetch(`/api/reports/quick/${period}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    container.innerHTML = `<div style="color: #ef4444; text-align: center;">Erro: ${data.message}</div>`;
+                    return;
+                }
+
+                const report = data.report;
+                let breakdownHtml = '';
+
+                for (const [classKey, counts] of Object.entries(report.by_class || {})) {
+                    const label = classLabels[classKey] || { icon: '❓', name: classKey };
+                    const total = (counts.in || 0) + (counts.out || 0);
+                    if (total > 0) {
+                        breakdownHtml += `
+                            <div class="qr-class">
+                                <span class="qr-class-icon">${label.icon}</span>
+                                <span class="qr-class-name">${label.name}</span>
+                                <span class="qr-class-count">${total}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                container.innerHTML = `
+                    <h4 style="color: #00d4ff; margin-bottom: 12px; font-size: 14px;">
+                        📊 Relatório: ${periodLabels[period] || period}
+                    </h4>
+                    <div class="quick-report-summary">
+                        <div class="qr-stat in">
+                            <div class="qr-stat-value">${report.summary.total_in}</div>
+                            <div class="qr-stat-label">Entradas</div>
+                        </div>
+                        <div class="qr-stat out">
+                            <div class="qr-stat-value">${report.summary.total_out}</div>
+                            <div class="qr-stat-label">Saídas</div>
+                        </div>
+                        <div class="qr-stat total">
+                            <div class="qr-stat-value">${report.summary.total}</div>
+                            <div class="qr-stat-label">Total</div>
+                        </div>
+                    </div>
+                    ${breakdownHtml ? `
+                        <h5 style="color: var(--text-muted); margin-bottom: 8px; font-size: 11px;">DETALHAMENTO</h5>
+                        <div class="qr-breakdown">${breakdownHtml}</div>
+                    ` : ''}
+                `;
+
+            } catch (error) {
+                container.innerHTML = `<div style="color: #ef4444; text-align: center;">Erro ao carregar relatório</div>`;
+                console.error('Erro no quickReport:', error);
+            }
+        }
+
+        function downloadReport(filename) {
+            window.open(`/api/reports/download/${filename}`, '_blank');
+        }
+
+        // ========== PAINÉIS EXPANSÍVEIS ==========
+        function togglePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            const toggle = document.getElementById(panelId + 'Toggle');
+            panel.classList.toggle('open');
+            toggle.textContent = panel.classList.contains('open') ? '▲' : '▼';
+        }
+
+        // ========== ANALYTICS TOGGLE ==========
+        const analyticsVisibility = {
+            lines: true,
+            zones: true,
+            abandoned: true
+        };
+
+        function toggleAnalytics(type, visible) {
+            analyticsVisibility[type] = visible;
+
+            // Atualizar classe do toggle
+            const toggle = document.getElementById('toggle' + type.charAt(0).toUpperCase() + type.slice(1));
+            if (toggle) {
+                toggle.classList.toggle('active', visible);
+            }
+
+            // Mostrar/ocultar painel correspondente
+            const panelMap = {
+                lines: 'linesPanelWrapper',
+                zones: 'zonesPanelWrapper',
+                abandoned: 'abandonedPanelWrapper'
+            };
+
+            const panel = document.getElementById(panelMap[type]);
+            if (panel) {
+                panel.classList.toggle('hidden', !visible);
+            }
+
+            // Notificar backend para mostrar/ocultar no video
+            updateAnalyticsVisibility();
+        }
+
+        async function updateAnalyticsVisibility() {
+            try {
+                await fetch('/api/analytics/visibility', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(analyticsVisibility)
+                });
+            } catch (e) {
+                // Endpoint opcional - ignorar erro
+            }
+        }
 
         // ========== CHART.JS SETUP ==========
         function initChart() {
@@ -1545,21 +3663,25 @@
                 // Pulse effect se número mudou
                 if (currentCount !== previousCount) {
                     const card = document.getElementById('peopleNowCard');
-                    card.classList.add('pulse');
-                    setTimeout(() => card.classList.remove('pulse'), 500);
+                    if (card) {
+                        card.classList.add('pulse');
+                        setTimeout(() => card.classList.remove('pulse'), 500);
+                    }
 
                     // Atualizar indicador
                     const diff = currentCount - previousCount;
                     const indicator = document.getElementById('peopleIndicator');
-                    if (diff > 0) {
-                        indicator.textContent = `▲ +${diff} desde última atualização`;
-                        indicator.style.color = 'var(--accent-success)';
-                    } else if (diff < 0) {
-                        indicator.textContent = `▼ ${diff} desde última atualização`;
-                        indicator.style.color = 'var(--accent-danger)';
-                    } else {
-                        indicator.textContent = '— sem mudanças';
-                        indicator.style.color = 'var(--text-muted)';
+                    if (indicator) {
+                        if (diff > 0) {
+                            indicator.textContent = `+${diff} agora`;
+                            indicator.style.color = 'var(--accent-success)';
+                        } else if (diff < 0) {
+                            indicator.textContent = `${diff} agora`;
+                            indicator.style.color = 'var(--accent-danger)';
+                        } else {
+                            indicator.textContent = '-- sem mudancas';
+                            indicator.style.color = 'var(--text-muted)';
+                        }
                     }
                 }
 
@@ -1571,7 +3693,10 @@
                     maxTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                 }
                 document.getElementById('maxToday').textContent = maxCount;
-                document.getElementById('maxTime').textContent = `às ${maxTime}`;
+                const maxTimeEl = document.getElementById('maxTime');
+                if (maxTimeEl) {
+                    maxTimeEl.textContent = `as ${maxTime}`;
+                }
 
                 // Atualizar FPS
                 const fpsValue = data.fps || 0;
@@ -1595,8 +3720,50 @@
                 // Atualizar gráfico
                 updateChart(currentCount);
 
+                // Atualizar contagem por categoria (detecções atuais do backend)
+                if (data.class_counts) {
+                    updateClassCountsFromStats(data.class_counts);
+                }
+
+                // Atualizar contadores das linhas em tempo real (a cada 1 segundo)
+                if (data.line_counts) {
+                    renderLines(data.line_counts);
+                }
+
             } catch (error) {
                 console.error('Erro ao atualizar stats:', error);
+            }
+        }
+
+        // Função para atualizar contadores por classe das detecções atuais
+        function updateClassCountsFromStats(classCounts) {
+            // Mapeamento de nomes do backend para IDs dos elementos
+            const classMapping = {
+                'person': 'countPerson',
+                'car': 'countCar',
+                'motorcycle': 'countMotorcycle',
+                'bus': 'countBus',
+                'truck': 'countTruck',
+                'bicycle': 'countBicycle'
+            };
+
+            let totalCount = 0;
+            for (const [className, count] of Object.entries(classCounts)) {
+                const elementId = classMapping[className];
+                if (elementId) {
+                    const el = document.getElementById(elementId);
+                    if (el) {
+                        el.textContent = count;
+                        el.style.color = count > 0 ? 'var(--accent-primary)' : 'var(--text-muted)';
+                    }
+                    totalCount += count;
+                }
+            }
+
+            // Atualizar badge total
+            const badge = document.getElementById('totalCountBadge');
+            if (badge) {
+                badge.textContent = totalCount;
             }
         }
 
@@ -1633,6 +3800,16 @@
                 const response = await fetch('/api/cameras');
                 const data = await response.json();
 
+                // Verificar se câmera ativa mudou
+                const previousCameraId = activeCameraId;
+                activeCameraId = data.active_camera_id;
+
+                // Se câmera mudou, recarregar linhas e zonas
+                if (previousCameraId !== activeCameraId) {
+                    loadLines();
+                    loadZones();
+                }
+
                 renderCameras(data);
             } catch (error) {
                 console.error('Erro ao carregar câmeras:', error);
@@ -1643,27 +3820,45 @@
         function renderCameras(data) {
             const container = document.getElementById('camerasGrid');
             const cameras = data.cameras || [];
-            const activeCameraId = data.active_camera_id;
+            const currentCameraId = data.active_camera_id;
 
             let html = '';
 
             // Renderizar câmeras existentes
             cameras.forEach(camera => {
-                const isActive = camera.id === activeCameraId;
+                const isActive = camera.id === currentCameraId;
+                const bgStatus = backgroundCameras[camera.id];
+                const isBackground = bgStatus?.is_running || false;
+
                 html += `
-                    <div class="camera-card ${isActive ? 'active' : ''}">
+                    <div class="camera-card ${isActive ? 'active' : ''}" data-camera-id="${camera.id}">
                         <div class="camera-header">
                             <div class="camera-name">
                                 📹 ${camera.name}
                             </div>
-                            <span class="camera-badge ${isActive ? 'active' : 'inactive'}">
-                                ${isActive ? '● ATIVA' : '○ INATIVA'}
-                            </span>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                ${isBackground ? `<span class="camera-badge background">⚡ BG</span>` : ''}
+                                <span class="camera-badge ${isActive ? 'active' : 'inactive'}">
+                                    ${isActive ? '● ATIVA' : '○ INATIVA'}
+                                </span>
+                            </div>
                         </div>
                         <div class="camera-url">${maskUrl(camera.url)}</div>
                         ${camera.description ? `<div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">${camera.description}</div>` : ''}
+                        ${isBackground ? `
+                            <div class="background-status">
+                                <span>📊 FPS: ${bgStatus.fps?.toFixed(1) || 0}</span>
+                                <span>👁️ Atual: ${bgStatus.current_count || 0}</span>
+                                <span>🎬 Frames: ${bgStatus.frame_count || 0}</span>
+                            </div>
+                        ` : ''}
                         <div class="camera-actions">
                             ${!isActive ? `<button class="btn-action primary" onclick="activateCamera(${camera.id})">Ativar</button>` : ''}
+                            <button class="btn-action ${isBackground ? 'btn-background active' : 'btn-background'}"
+                                    onclick="toggleBackgroundProcessing(${camera.id}, '${escapeHtml(camera.name)}')"
+                                    title="${isBackground ? 'Parar processamento background' : 'Iniciar processamento background'}">
+                                ${isBackground ? '⏹️ Parar BG' : '▶️ Background'}
+                            </button>
                             <button class="btn-action" onclick="editCamera(${camera.id}, '${escapeHtml(camera.name)}', '${escapeHtml(camera.url)}', '${escapeHtml(camera.description || '')}')">Editar</button>
                             <button class="btn-action danger" onclick="deleteCamera(${camera.id}, '${escapeHtml(camera.name)}')">Excluir</button>
                         </div>
@@ -1778,6 +3973,8 @@
         async function activateCamera(id) {
             if (!confirm('Deseja ativar esta câmera?')) return;
 
+            showToast('Conectando à câmera...', 'warning');
+
             try {
                 const response = await fetch(`/api/cameras/${id}/activate`, {
                     method: 'POST'
@@ -1786,14 +3983,21 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    showToast(result.message, 'success');
+                    showToast(result.message || 'Câmera ativada com sucesso!', 'success');
+                    // Atualizar ID da câmera ativa e recarregar linhas/zonas
+                    activeCameraId = result.camera?.id || null;
                     loadCameras();
+                    loadLines();
+                    loadZones();
                 } else {
-                    showToast(result.message, 'error');
+                    // Mostrar mensagem de erro detalhada
+                    const errorMsg = result.message || 'Erro desconhecido ao ativar câmera';
+                    showToast(errorMsg, 'error');
+                    console.error('Erro ao ativar câmera:', errorMsg);
                 }
             } catch (error) {
                 console.error('Erro ao ativar câmera:', error);
-                showToast('Erro ao ativar câmera', 'error');
+                showToast('Erro de conexão. Verifique se o servidor está online.', 'error');
             }
         }
 
@@ -1816,6 +4020,88 @@
             } catch (error) {
                 console.error('Erro ao excluir câmera:', error);
                 showToast('Erro ao excluir câmera', 'error');
+            }
+        }
+
+        // ========== PROCESSAMENTO BACKGROUND ==========
+        async function loadBackgroundStatus() {
+            try {
+                const response = await fetch('/api/background/status');
+                const data = await response.json();
+
+                // Atualizar mapa de câmeras em background
+                backgroundCameras = {};
+                (data.stats || []).forEach(stat => {
+                    backgroundCameras[stat.camera_id] = stat;
+                });
+
+                // Atualizar UI das câmeras
+                updateBackgroundBadges();
+            } catch (error) {
+                console.error('Erro ao carregar status background:', error);
+            }
+        }
+
+        function updateBackgroundBadges() {
+            // Atualizar badges de background nos cards de câmera
+            document.querySelectorAll('.camera-card').forEach(card => {
+                const cameraId = card.dataset?.cameraId;
+                if (cameraId && backgroundCameras[cameraId]) {
+                    const stats = backgroundCameras[cameraId];
+                    const statusDiv = card.querySelector('.background-status');
+                    if (statusDiv && stats.is_running) {
+                        statusDiv.innerHTML = `
+                            🎬 Background: <span class="fps">${stats.fps} FPS</span>
+                            | Frames: ${stats.frame_count}
+                        `;
+                    }
+                }
+            });
+        }
+
+        async function toggleBackgroundProcessing(cameraId, cameraName) {
+            const isRunning = backgroundCameras[cameraId]?.is_running;
+
+            if (isRunning) {
+                // Parar
+                if (!confirm(`Parar processamento background de "${cameraName}"?`)) return;
+                try {
+                    const response = await fetch('/api/background/stop', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ camera_id: cameraId })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast(`Background parado: ${cameraName}`, 'success');
+                        delete backgroundCameras[cameraId];
+                        loadCameras();
+                    } else {
+                        showToast(result.message, 'error');
+                    }
+                } catch (error) {
+                    showToast('Erro ao parar background', 'error');
+                }
+            } else {
+                // Iniciar
+                try {
+                    showToast(`Iniciando background: ${cameraName}...`, 'warning');
+                    const response = await fetch('/api/background/start', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ camera_id: cameraId })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast(`Background iniciado: ${cameraName}`, 'success');
+                        loadBackgroundStatus();
+                        loadCameras();
+                    } else {
+                        showToast(result.message, 'error');
+                    }
+                } catch (error) {
+                    showToast('Erro ao iniciar background', 'error');
+                }
             }
         }
 
