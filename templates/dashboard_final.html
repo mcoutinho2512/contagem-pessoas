@@ -12,6 +12,14 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
+    <!-- CSS Externo - Sistema Responsivo -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 
@@ -621,8 +629,9 @@
         .cameras-section {
             max-width: 1920px;
             margin: 0 auto;
-            padding: 0 30px 30px;
+            padding: 30px 30px 30px;
             animation: slideUp 0.6s ease-out 0.3s both;
+            clear: both;
         }
 
         .cameras-section h2 {
@@ -647,6 +656,9 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 200px;
         }
 
         .camera-card:hover {
@@ -773,22 +785,25 @@
         }
 
         .camera-actions {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 8px;
-            margin-top: 16px;
+            margin-top: auto;
+            padding-top: 16px;
         }
 
         .btn-action {
-            flex: 1;
-            padding: 8px 16px;
+            padding: 8px 12px;
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             border-radius: 8px;
             color: var(--text-primary);
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s;
+            text-align: center;
+            white-space: nowrap;
         }
 
         .btn-action:hover {
@@ -1193,13 +1208,13 @@
             }
 
             .camera-actions {
-                flex-direction: column;
-                gap: 8px;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
             }
 
             .btn-action {
-                width: 100%;
-                padding: 10px 16px;
+                padding: 10px 8px;
+                font-size: 11px;
             }
 
             /* Modal em mobile */
@@ -1497,8 +1512,11 @@
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             margin-top: 16px;
+            margin-bottom: 16px;
             flex-wrap: wrap;
             align-items: center;
+            position: relative;
+            z-index: 10;
         }
 
         .toolbar-group {
@@ -1558,7 +1576,7 @@
             backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
             border-radius: 10px;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .advanced-panel.hidden {
@@ -1659,9 +1677,19 @@
 
         .panel-content.open,
         .panel-content.expanded {
-            max-height: 2000px;
+            max-height: 400px;
             padding: 10px;
             overflow-y: auto;
+        }
+
+        /* Painel de linhas - SEM limite de altura */
+        #linesPanel {
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        #linesList {
+            display: block;
         }
 
         .panel-content::-webkit-scrollbar {
@@ -2399,31 +2427,6 @@
                 </div>
                 <div class="video-timestamp" id="timestamp">--:--:--</div>
             </div>
-
-            <!-- TOOLBAR DE DESENHO -->
-            <div class="drawing-toolbar">
-                <div class="toolbar-group">
-                    <span class="toolbar-label">Ferramentas:</span>
-                    <button class="toolbar-btn" id="btnDrawLine" onclick="setDrawingMode('line')">
-                        📏 Linha Virtual
-                    </button>
-                    <button class="toolbar-btn" id="btnDrawZone" onclick="setDrawingMode('zone')">
-                        ⬡ Zona
-                    </button>
-                </div>
-                <div class="toolbar-group">
-                    <button class="toolbar-btn" id="btnCancel" onclick="cancelDrawing()" style="display:none;">
-                        ✕ Cancelar
-                    </button>
-                    <button class="toolbar-btn" id="btnFinishZone" onclick="finishZone()" style="display:none;">
-                        ✓ Finalizar Zona
-                    </button>
-                </div>
-                <div class="toolbar-group">
-                    <button class="toolbar-btn danger" onclick="clearAllLines()">🗑️ Limpar Linhas</button>
-                    <button class="toolbar-btn danger" onclick="clearAllZones()">🗑️ Limpar Zonas</button>
-                </div>
-            </div>
         </section>
 
         <!-- SIDEBAR -->
@@ -2519,19 +2522,13 @@
                 </div>
             </div>
 
-            <!-- PAINEL LINHAS VIRTUAIS -->
-            <div class="advanced-panel" id="linesPanelWrapper">
-                <div class="panel-header" onclick="togglePanel('linesPanel')">
-                    <div class="panel-title">
-                        📏 Linhas Virtuais
-                        <span class="panel-badge" id="linesBadge">0</span>
-                    </div>
-                    <span class="panel-toggle" id="linesPanelToggle">▲</span>
+            <!-- PAINEL LINHAS VIRTUAIS - SIMPLIFICADO -->
+            <div style="background: rgba(0,20,40,0.8); border-radius: 8px; margin-bottom: 10px; padding: 10px;">
+                <div style="font-weight: bold; margin-bottom: 10px; color: #00d4ff;">
+                    📏 Linhas Virtuais <span id="linesBadge" style="background:#00d4ff; color:#000; padding:2px 8px; border-radius:10px; font-size:11px;">0</span>
                 </div>
-                <div class="panel-content open" id="linesPanel">
-                    <div id="linesList">
-                        <div class="panel-empty">Nenhuma linha. Desenhe no video.</div>
-                    </div>
+                <div id="linesList" style="max-height: 500px; overflow-y: auto;">
+                    <div class="panel-empty">Nenhuma linha. Desenhe no video.</div>
                 </div>
             </div>
 
@@ -2581,6 +2578,24 @@
     <!-- CAMERAS SECTION -->
     <section class="cameras-section">
         <h2>Câmeras Monitoradas</h2>
+
+        <!-- TOOLBAR DE FERRAMENTAS (movida para cá) -->
+        <div class="tools-toolbar" style="display: flex; gap: 8px; padding: 12px 16px; background: rgba(0,20,40,0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+            <span style="font-size: 12px; color: #6b7280; margin-right: 8px;">FERRAMENTAS:</span>
+            <button class="toolbar-btn" onclick="setDrawingMode('line')" style="padding: 8px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #e5e7eb; font-size: 13px; cursor: pointer;">
+                📏 Linha Virtual
+            </button>
+            <button class="toolbar-btn" onclick="setDrawingMode('zone')" style="padding: 8px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #e5e7eb; font-size: 13px; cursor: pointer;">
+                ⬡ Zona
+            </button>
+            <button class="toolbar-btn" onclick="clearAllLines()" style="padding: 8px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #e5e7eb; font-size: 13px; cursor: pointer;">
+                🗑️ Limpar Linhas
+            </button>
+            <button class="toolbar-btn" onclick="clearAllZones()" style="padding: 8px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #e5e7eb; font-size: 13px; cursor: pointer;">
+                🗑️ Limpar Zonas
+            </button>
+        </div>
+
         <div class="cameras-grid" id="camerasGrid">
             <!-- Será preenchido via JavaScript -->
         </div>
@@ -3083,9 +3098,15 @@
                 <div class="lines-separator"></div>
             `;
 
-            // HTML de cada linha individual - CARDS MELHORADOS
-            lines.forEach((line, index) => {
-                // Calcular totais da linha
+            // HTML de cada linha individual - CARDS SIMPLES
+            console.log('Renderizando', lines.length, 'linhas');
+
+            const lineColors = ['#00d4ff', '#10b981', '#f59e0b', '#ef4444'];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const lineColor = lineColors[i % lineColors.length];
+
                 let lineIn = 0, lineOut = 0;
                 for (const counts of Object.values(line.counts || {})) {
                     lineIn += counts.in || 0;
@@ -3093,62 +3114,37 @@
                 }
                 const lineTotal = lineIn + lineOut;
 
-                // Cores para cada linha
-                const lineColors = ['#00d4ff', '#10b981', '#f59e0b', '#ef4444'];
-                const lineColor = lineColors[index % lineColors.length];
-
-                // Construir breakdown por tipo de veículo
-                let breakdownHtml = '';
-                for (const [classKey, label] of Object.entries(classLabels)) {
-                    const inCount = line.counts?.[classKey]?.in || 0;
-                    const outCount = line.counts?.[classKey]?.out || 0;
-                    const total = inCount + outCount;
-
-                    breakdownHtml += `
-                        <div class="line-card-type ${total > 0 ? 'active' : ''}">
-                            <span class="type-icon">${label.icon}</span>
-                            <span class="type-count">${total}</span>
-                            <div class="type-details">
-                                <span class="type-in">↓${inCount}</span>
-                                <span class="type-out">↑${outCount}</span>
-                            </div>
-                        </div>
-                    `;
-                }
+                console.log('Card', i, line.name, 'IN:', lineIn, 'OUT:', lineOut);
 
                 html += `
-                    <div class="line-card" id="line-card-${line.id}" style="--line-color: ${lineColor}">
-                        <div class="line-card-header">
-                            <div class="line-card-title">
-                                <span class="line-color-dot" style="background: ${lineColor}"></span>
-                                <span class="line-name">${escapeHtml(line.name)}</span>
+                    <div style="background: rgba(20,30,50,0.9); border-left: 4px solid ${lineColor}; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 12px; height: 12px; border-radius: 50%; background: ${lineColor};"></span>
+                                <strong style="color: #fff;">${escapeHtml(line.name)}</strong>
                             </div>
-                            <button class="line-card-delete" onclick="deleteLine('${line.id}')" title="Excluir linha">×</button>
+                            <button onclick="deleteLine('${line.id}')" style="background: #ef4444; border: none; color: #fff; width: 24px; height: 24px; border-radius: 4px; cursor: pointer;">×</button>
                         </div>
-
-                        <div class="line-card-stats">
-                            <div class="stat-block stat-in">
-                                <div class="stat-value">${lineIn}</div>
-                                <div class="stat-label">ENTRADA</div>
+                        <div style="display: flex; gap: 20px; font-family: monospace;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: bold; color: #10b981;">${lineIn}</div>
+                                <div style="font-size: 10px; color: #888;">ENTRADA</div>
                             </div>
-                            <div class="stat-block stat-out">
-                                <div class="stat-value">${lineOut}</div>
-                                <div class="stat-label">SAÍDA</div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">${lineOut}</div>
+                                <div style="font-size: 10px; color: #888;">SAÍDA</div>
                             </div>
-                            <div class="stat-block stat-total">
-                                <div class="stat-value">${lineTotal}</div>
-                                <div class="stat-label">TOTAL</div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: bold; color: ${lineColor};">${lineTotal}</div>
+                                <div style="font-size: 10px; color: #888;">TOTAL</div>
                             </div>
-                        </div>
-
-                        <div class="line-card-breakdown">
-                            ${breakdownHtml}
                         </div>
                     </div>
                 `;
-            });
+            }
 
             container.innerHTML = html;
+            console.log('HTML length:', html.length);
         }
 
         async function deleteLine(id) {
@@ -4132,5 +4128,8 @@
             }
         });
     </script>
+
+    <!-- JavaScript Externo Modular (para futuras expansões) -->
+    <!-- <script src="{{ url_for('static', filename='js/ui-manager.js') }}" defer></script> -->
 </body>
 </html>

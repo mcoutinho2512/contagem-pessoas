@@ -313,9 +313,28 @@ def video_feed():
 
 
 @app.route('/stats')
+@app.route('/api/stats')
 def get_stats():
     """Endpoint para obter estatísticas em JSON"""
-    return jsonify(stats)
+    return jsonify({
+        'current_count': stats.get('current_count', 0),
+        'max_count': stats.get('max_count', 0),
+        'fps': stats.get('fps', 0),
+        'frame_count': stats.get('frame_count', 0),
+        'status': stats.get('status', 'Desconhecido'),
+        'detection_accuracy': 0,
+        'camera_connected': stats.get('status', '') == 'Sistema ativo',
+        'class_counts': {}
+    })
+
+
+@app.route('/api/cameras')
+def get_cameras():
+    """Endpoint para listar cameras"""
+    return jsonify({
+        'cameras': [],
+        'active_camera_id': None
+    })
 
 
 def run_counter():
